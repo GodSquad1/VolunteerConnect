@@ -1,11 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Calendar, Users, ArrowLeft, Filter } from 'lucide-react';
+import { Search, MapPin, Calendar, Users, ArrowLeft, Navigation } from 'lucide-react';
 import { getAllOpportunities } from '../lib/firestore';
 import { useAuth } from '../context/AuthContext';
 
 const CATEGORIES = ['All', 'Help people directly', 'Work with animals', 'Protect the environment', 'Support education'];
+const DISTANCE_OPTIONS = [
+  { label: 'Any distance', max: Infinity },
+  { label: 'Within 5 mi', max: 5 },
+  { label: 'Within 10 mi', max: 10 },
+  { label: 'Within 25 mi', max: 25 },
+  { label: 'Within 50 mi', max: 50 },
+];
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 3958.8; // miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function geocode(locationStr) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locationStr)}&format=json&limit=1`,
+      { headers: { 'Accept-Language': 'en' } }
+    );
+    const data = await res.json();
+    if (data[0]) return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+  } catch {}
+  return null;
+}
 
 export default function VolunteerSearch() {
   const navigate = useNavigate();
@@ -14,6 +42,11 @@ export default function VolunteerSearch() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
+  const [distanceFilter, setDistanceFilter] = useState(Infinity);
+  const [userCoords, setUserCoords] = useState(null);
+  const [locationStatus, setLocationStatus] = useState('idle'); // idle | loading | granted | denied
+  const [distances, setDistances] = useState({}); // oppId -> miles
+  const geocodeCache = useRef({});
 
   useEffect(() => {
     getAllOpportunities()
@@ -21,6 +54,40 @@ export default function VolunteerSearch() {
       .catch(() => setOpps([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const requestLocation = useCallback(() => {
+    if (!navigator.geolocation) { setLocationStatus('denied'); return; }
+    setLocationStatus('loading');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        setLocationStatus('granted');
+      },
+      () => setLocationStatus('denied')
+    );
+  }, []);
+
+  // Geocode opportunity locations and compute distances when we have user coords
+  useEffect(() => {
+    if (!userCoords || opps.length === 0) return;
+    const compute = async () => {
+      const newDistances = {};
+      for (const opp of opps) {
+        if (!opp.location) continue;
+        if (!geocodeCache.current[opp.location]) {
+          geocodeCache.current[opp.location] = await geocode(opp.location);
+          // Respect Nominatim rate limit
+          await new Promise(r => setTimeout(r, 200));
+        }
+        const coords = geocodeCache.current[opp.location];
+        if (coords) {
+          newDistances[opp.id] = haversine(userCoords.lat, userCoords.lon, coords.lat, coords.lon);
+        }
+      }
+      setDistances(prev => ({ ...prev, ...newDistances }));
+    };
+    compute();
+  }, [userCoords, opps]);
 
   const filtered = opps.filter((o) => {
     const matchesQuery =
@@ -30,7 +97,8 @@ export default function VolunteerSearch() {
       o.description?.toLowerCase().includes(query.toLowerCase()) ||
       o.location?.toLowerCase().includes(query.toLowerCase());
     const matchesCat = category === 'All' || o.impact === category;
-    return matchesQuery && matchesCat && o.status !== 'closed';
+    const matchesDist = distanceFilter === Infinity || distances[o.id] === undefined || distances[o.id] <= distanceFilter;
+    return matchesQuery && matchesCat && matchesDist && o.status !== 'closed';
   });
 
   return (
@@ -71,8 +139,8 @@ export default function VolunteerSearch() {
             />
           </div>
 
-          {/* Category filter */}
-          <div className="flex flex-wrap gap-2 mb-8">
+          {/* Filters row */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
             {CATEGORIES.map((cat) => (
               <motion.button
                 key={cat}
@@ -85,6 +153,38 @@ export default function VolunteerSearch() {
                 }`}
               >
                 {cat}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Distance filter row */}
+          <div className="flex flex-wrap items-center gap-2 mb-8">
+            {locationStatus === 'idle' && (
+              <motion.button whileTap={{ scale: 0.96 }} onClick={requestLocation}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border text-text-secondary hover:border-primary hover:text-primary transition-colors">
+                <Navigation size={11} /> Enable location to filter by distance
+              </motion.button>
+            )}
+            {locationStatus === 'loading' && (
+              <span className="text-xs text-text-tertiary flex items-center gap-1.5">
+                <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1, repeat: Infinity }}>
+                  <Navigation size={11} />
+                </motion.span>
+                Getting your location…
+              </span>
+            )}
+            {locationStatus === 'denied' && (
+              <span className="text-xs text-red-400">Location access denied — distance filter unavailable</span>
+            )}
+            {locationStatus === 'granted' && DISTANCE_OPTIONS.map((opt) => (
+              <motion.button key={opt.label} whileTap={{ scale: 0.96 }}
+                onClick={() => setDistanceFilter(opt.max)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  distanceFilter === opt.max
+                    ? 'border-primary bg-primary-dim text-primary'
+                    : 'border-border text-text-secondary hover:border-border-bright'
+                }`}>
+                {opt.label}
               </motion.button>
             ))}
           </div>
@@ -130,7 +230,7 @@ export default function VolunteerSearch() {
 
                   <div className="flex flex-col gap-1 text-xs text-text-secondary">
                     {opp.date && <span className="flex items-center gap-1.5"><Calendar size={11} className="text-primary shrink-0" />{opp.date}{opp.time ? ` · ${opp.time}` : ''}</span>}
-                    {opp.location && <span className="flex items-center gap-1.5"><MapPin size={11} className="text-primary shrink-0" />{opp.location}</span>}
+                    {opp.location && <span className="flex items-center gap-1.5"><MapPin size={11} className="text-primary shrink-0" />{opp.location}{distances[opp.id] !== undefined ? <span className="text-text-tertiary">· {distances[opp.id] < 1 ? '< 1' : distances[opp.id].toFixed(1)} mi away</span> : null}</span>}
                     <span className="flex items-center gap-1.5">
                       <Users size={11} style={{ color: spotsLeft === 0 ? '#F87171' : '#FB923C' }} />
                       <span style={{ color: spotsLeft === 0 ? '#F87171' : '#FB923C' }}>
