@@ -31,9 +31,9 @@ export default function MatchCard({ opportunity, onShowAlternatives, hasAlternat
   const orgInitials = opp
     ? opp.orgName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
     : matchResult.orgInitials;
-  const title = opp?.title ?? matchResult.title;
+  const title = opp?.description ?? matchResult.title;
   const date = opp?.date ?? matchResult.date;
-  const location = opp?.location ?? matchResult.location;
+  const location = opp?.address ?? opp?.location ?? matchResult.location;
   const remote = opp?.remote ?? false;
 
   return (
@@ -111,8 +111,13 @@ export default function MatchCard({ opportunity, onShowAlternatives, hasAlternat
       {/* Content */}
       <div className="px-6 py-5 space-y-4">
         <h2 className="text-xl font-semibold text-text-primary leading-snug tracking-heading">
-          {title}
+          {opp?.orgName ?? matchResult.title}
         </h2>
+        {opp?.description && (
+          <p className="text-sm text-text-secondary leading-relaxed -mt-2">
+            {opp.description}
+          </p>
+        )}
 
         {/* Personal note */}
         <div className="border-l-2 border-primary pl-4 bg-primary-dim/30 rounded-r-btn py-3 pr-3 min-h-[72px]">
