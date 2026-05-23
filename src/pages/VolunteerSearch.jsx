@@ -16,7 +16,10 @@ export default function VolunteerSearch() {
   const [category, setCategory] = useState('All');
 
   useEffect(() => {
-    getAllOpportunities().then((data) => { setOpps(data); setLoading(false); });
+    getAllOpportunities()
+      .then((data) => setOpps(data))
+      .catch(() => setOpps([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = opps.filter((o) => {

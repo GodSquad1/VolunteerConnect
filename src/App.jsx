@@ -52,12 +52,15 @@ function CoordinatorRoute({ children }) {
   const [hasOrg, setHasOrg] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    getOrgByUser(user.uid).then((org) => {
-      setHasOrg(!!org);
-      setChecking(false);
-    });
-  }, [user]);
+    // If auth is still loading, wait
+    if (loading) return;
+    // If no user, stop checking immediately — redirect below will handle it
+    if (!user) { setChecking(false); return; }
+    getOrgByUser(user.uid)
+      .then((org) => setHasOrg(!!org))
+      .catch(() => setHasOrg(false))
+      .finally(() => setChecking(false));
+  }, [user, loading]);
 
   if (loading || checking) return <LoadingScreen />;
 

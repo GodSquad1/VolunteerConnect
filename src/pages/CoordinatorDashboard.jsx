@@ -128,7 +128,10 @@ export default function CoordinatorDashboard() {
 
   useEffect(() => {
     if (!user) return;
-    getOrgByUser(user.uid).then((o) => { setOrg(o); setLoading(false); });
+    getOrgByUser(user.uid)
+      .then((o) => setOrg(o))
+      .catch(() => setOrg(null))
+      .finally(() => setLoading(false));
   }, [user]);
 
   useEffect(() => {

@@ -15,7 +15,10 @@ export default function OpportunityDetail() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    getOpportunity(id).then((data) => { setOpp(data); setLoading(false); });
+    getOpportunity(id)
+      .then((data) => setOpp(data))
+      .catch(() => setOpp(null))
+      .finally(() => setLoading(false));
   }, [id]);
 
   const handleSignUp = async () => {
