@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Users, Zap, Check } from 'lucide-react';
@@ -7,10 +7,10 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   googleProvider,
 } from '../lib/firebase';
-
 const volunteerContext = {
   role: 'volunteer',
   label: 'Volunteer',
@@ -67,19 +67,32 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
 
+  // Handle redirect result when returning from Google sign-in
+  useEffect(() => {
+    setGoogleLoading(true);
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          setDone(true);
+          setTimeout(() => navigate(next), 900);
+        }
+      })
+      .catch((err) => {
+        if (err.code !== 'auth/cancelled-popup-request') {
+          setError(firebaseErrorMessage(err.code));
+        }
+      })
+      .finally(() => setGoogleLoading(false));
+  }, []);
+
   const handleGoogleSignIn = async () => {
     setError('');
     setGoogleLoading(true);
-    try {
-      await signInWithPopup(auth, googleProvider);
-      setDone(true);
-      setTimeout(() => navigate(next), 900);
-    } catch (err) {
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError(firebaseErrorMessage(err.code));
-      }
-      setGoogleLoading(false);
-    }
+    // Store next/role so we can redirect correctly after returning
+    sessionStorage.setItem('authNext', next);
+    sessionStorage.setItem('authRole', roleParam);
+    await signInWithRedirect(auth, googleProvider);
+    // Page navigates away — no code runs after this
   };
 
   const handleSubmit = async (e) => {

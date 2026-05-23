@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { org, shifts, volunteers, activityFeed } from '../data/mockData';
 
 const API_KEY = 'AIzaSyB3rgeda4rIvkPOJbn2vHmFT7Wr58XanzE';
+const MODEL = 'gemini-2.0-flash-lite';
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 // ─── Coordinator CommandBar ────────────────────────────────────────────────
@@ -36,7 +37,7 @@ Use 4–7 action items. Use ⚡ for in-progress/AI tasks, ✓ for completed step
 Status must be "done", "pending", or "alert". Be specific — mention actual volunteer names, shift names, and times from context above.`;
 
 export async function runCoordinatorCommand(query) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: MODEL });
   const result = await model.generateContent([
     { text: COORDINATOR_SYSTEM },
     { text: `Coordinator query: "${query}"` },
@@ -50,7 +51,7 @@ export async function runCoordinatorCommand(query) {
 // ─── Volunteer Match Personalization ──────────────────────────────────────
 
 export async function generateMatchNote({ impact, skills, motivation }) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: MODEL });
 
   const prompt = `A volunteer just completed an intake form. Based on their answers, write a warm, personal 2-sentence explanation for why they would be a great fit for the "Weekend Meals Coordinator" role at Sunrise Senior Center — an org that serves 200+ seniors every weekend.
 
@@ -73,7 +74,7 @@ Rules:
 // ─── Rank real opportunities + generate personal note (single call) ────────
 
 export async function rankAndPersonalize({ opportunities, impact, skills, motivation }) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: MODEL });
 
   const oppsText = opportunities
     .map(
