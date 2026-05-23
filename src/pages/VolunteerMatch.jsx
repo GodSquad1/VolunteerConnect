@@ -5,7 +5,7 @@ import { ArrowLeft, Calendar, MapPin, ExternalLink } from 'lucide-react';
 import MatchCard from '../components/MatchCard';
 
 function AlternativeCard({ opportunity, index, onSelect }) {
-  const orgInitials = opportunity.orgName
+  const orgInitials = (opportunity.orgName || 'VC')
     .split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 
   return (

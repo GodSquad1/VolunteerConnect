@@ -29,7 +29,7 @@ export default function MatchCard({ opportunity, onShowAlternatives, hasAlternat
 
   const orgName = opp?.orgName ?? matchResult.orgName;
   const orgInitials = opp
-    ? opp.orgName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+    ? (opp.orgName || 'VC').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
     : matchResult.orgInitials;
   const title = opp?.description ?? matchResult.title;
   const date = opp?.date ?? matchResult.date;
