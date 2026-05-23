@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VolunteerConnect</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    *{font-family:'DM Sans',sans-serif}
+    .fd{font-family:'Syne',sans-serif}
+    html,body{min-height:100vh}
+    body{background:#f0f4ff;transition:background .3s}
+    body.dark{background:#0f1117}
+ 
+    /* Mesh BG */
+    .mesh{position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(ellipse at 15% 20%,rgba(99,102,241,.15) 0%,transparent 55%),
+                 radial-gradient(ellipse at 85% 80%,rgba(59,130,246,.12) 0%,transparent 55%),
+                 radial-gradient(ellipse at 60% 5%,rgba(139,92,246,.1) 0%,transparent 50%)}
+ 
+    /* Cards */
+    .card{background:rgba(255,255,255,.92);backdrop-filter:blur(20px);
+      border:1px solid rgba(255,255,255,.9);
+      box-shadow:0 20px 50px rgba(99,102,241,.1),0 4px 16px rgba(0,0,0,.05);border-radius:24px}
+    .dark .card{background:rgba(17,24,39,.92);border:1px solid rgba(99,102,241,.2);
+      box-shadow:0 20px 50px rgba(0,0,0,.4)}
+    .org-card{background:rgba(255,255,255,.95);border:1px solid rgba(255,255,255,.8);
+      box-shadow:0 4px 20px rgba(99,102,241,.07),0 1px 4px rgba(0,0,0,.04);
+      border-radius:20px;transition:all .25s ease}
+    .org-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(99,102,241,.15)}
+    .dark .org-card{background:rgba(17,24,39,.92);border:1px solid rgba(99,102,241,.15)}
+    .dark .org-card:hover{box-shadow:0 12px 40px rgba(0,0,0,.4),0 0 0 1px rgba(99,102,241,.3)}
+ 
+    /* Header */
+    .hdr{background:rgba(255,255,255,.88);backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(99,102,241,.1);position:sticky;top:0;z-index:40}
+    .dark .hdr{background:rgba(10,12,20,.92);border-bottom:1px solid rgba(99,102,241,.2)}
+ 
+    /* Buttons */
+    .btn-p{background:linear-gradient(135deg,#6366f1,#3b82f6);
+      box-shadow:0 4px 15px rgba(99,102,241,.35);border-radius:12px;
+      transition:all .2s;color:white}
+    .btn-p:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(99,102,241,.45)}
+    .btn-p:active{transform:translateY(0)}
+    .btn-o{border:1.5px solid #e2e8f0;border-radius:12px;transition:all .2s;background:transparent}
+    .btn-o:hover{border-color:#6366f1;color:#6366f1;background:rgba(99,102,241,.05)}
+    .dark .btn-o{border-color:rgba(99,102,241,.3);color:#a5b4fc}
+    .dark .btn-o:hover{border-color:#818cf8;background:rgba(99,102,241,.1)}
+    .btn-g{background:linear-gradient(135deg,#10b981,#059669);
+      box-shadow:0 3px 12px rgba(16,185,129,.3);border-radius:12px;transition:all .2s;color:white}
+    .btn-g:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(16,185,129,.4)}
+    .btn-g.rsvped{background:linear-gradient(135deg,#6366f1,#3b82f6);
+      box-shadow:0 3px 12px rgba(99,102,241,.3)}
+ 
+    /* Inputs */
+    .inp{background:rgba(248,250,252,.9);border:1.5px solid #e2e8f0;border-radius:12px;
+      padding:12px 16px;font-size:.875rem;transition:all .2s;width:100%;color:#1f2937}
+    .inp:focus{outline:none;border-color:#6366f1;background:white;
+      box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+    .dark .inp{background:rgba(30,41,59,.85);border-color:rgba(99,102,241,.3);color:#e2e8f0}
+    .dark .inp:focus{border-color:#818cf8;background:rgba(30,41,59,1);
+      box-shadow:0 0 0 3px rgba(99,102,241,.2)}
+ 
+    /* Choice buttons (onboarding) */
+    .ch{border:2px solid #e2e8f0;border-radius:12px;padding:10px 16px;cursor:pointer;
+      transition:all .18s;background:white;font-size:.875rem;font-weight:500;color:#374151;
+      user-select:none;text-align:left}
+    .ch:hover{border-color:#a5b4fc;background:#f5f3ff;transform:translateY(-1px)}
+    .ch.on{border-color:#6366f1;background:linear-gradient(135deg,#ede9fe,#dbeafe);
+      color:#4f46e5;box-shadow:0 4px 12px rgba(99,102,241,.2)}
+    .dark .ch{background:rgba(30,41,59,.8);border-color:rgba(99,102,241,.25);color:#cbd5e1}
+    .dark .ch:hover{border-color:#818cf8;background:rgba(99,102,241,.12)}
+    .dark .ch.on{border-color:#818cf8;background:rgba(99,102,241,.22);color:#a5b4fc}
+ 
+    /* Tabs */
+    .tab{border-radius:10px;padding:8px 18px;font-size:.875rem;font-weight:500;
+      transition:all .2s;color:#6b7280;cursor:pointer}
+    .tab.on{background:linear-gradient(135deg,#6366f1,#3b82f6);color:white;
+      box-shadow:0 3px 10px rgba(99,102,241,.3)}
+    .tab:hover:not(.on){background:rgba(99,102,241,.08);color:#6366f1}
+    .dark .tab{color:#94a3b8}
+    .dark .tab:hover:not(.on){background:rgba(99,102,241,.12);color:#a5b4fc}
+ 
+    /* Match badge */
+    .mbadge{background:linear-gradient(135deg,#ede9fe,#dbeafe);color:#4f46e5;
+      border-radius:20px;font-size:.72rem;font-weight:600;padding:3px 10px;white-space:nowrap}
+    .dark .mbadge{background:rgba(99,102,241,.2);color:#a5b4fc}
+ 
+    /* Progress */
+    .prog{height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden}
+    .dark .prog{background:rgba(99,102,241,.2)}
+    .prog-f{height:100%;background:linear-gradient(90deg,#6366f1,#3b82f6);
+      border-radius:2px;transition:width .4s ease}
+ 
+    /* Step indicator */
+    .sind{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;
+      justify-content:center;font-size:.8rem;font-weight:600;transition:all .3s;flex-shrink:0}
+    .sind-a{background:linear-gradient(135deg,#6366f1,#3b82f6);color:white;
+      box-shadow:0 4px 12px rgba(99,102,241,.4)}
+    .sind-d{background:#10b981;color:white}
+    .sind-u{background:#e2e8f0;color:#94a3b8}
+    .dark .sind-u{background:#374151;color:#6b7280}
+ 
+    /* Modal */
+    .moverlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.52);
+      backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
+      padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+    .moverlay.open{opacity:1;pointer-events:all}
+    .mbox{background:white;border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.2);
+      width:100%;max-width:500px;transform:scale(.95) translateY(10px);
+      transition:all .25s;max-height:90vh;overflow-y:auto}
+    .dark .mbox{background:#111827;border:1px solid rgba(99,102,241,.2)}
+    .moverlay.open .mbox{transform:scale(1) translateY(0)}
+ 
+    /* Toast */
+    .toast{position:fixed;bottom:24px;right:24px;z-index:200;background:#111827;
+      color:white;padding:14px 20px;border-radius:14px;font-size:.875rem;
+      box-shadow:0 8px 30px rgba(0,0,0,.3);transform:translateY(80px);opacity:0;
+      transition:all .3s ease;pointer-events:none}
+    .toast.show{transform:translateY(0);opacity:1}
+    .dark .toast{background:rgba(30,41,59,.98);border:1px solid rgba(99,102,241,.3)}
+ 
+    /* Skeleton */
+    @keyframes shimmer{from{background-position:-400px 0}to{background-position:400px 0}}
+    .skel{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+      background-size:800px 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+    .dark .skel{background:linear-gradient(90deg,#1f2937 25%,#374151 50%,#1f2937 75%);
+      background-size:800px 100%}
+ 
+    /* Animations */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+    .fu{animation:fadeUp .4s ease forwards;opacity:0}
+    @keyframes slideRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+    .sr{animation:slideRight .3s ease}
+    @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}
+      40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+    .shake{animation:shake .4s ease}
+ 
+    /* Dark text */
+    .dark .dkt{color:#e2e8f0!important}
+    .dark .dk5{color:#94a3b8!important}
+    .dark .dk4{color:#6b7280!important}
+ 
+    /* Spots badge */
+    .slow{background:#fee2e2;color:#dc2626;border-radius:20px;
+      font-size:.7rem;font-weight:600;padding:2px 8px}
+    .sok{background:#dcfce7;color:#16a34a;border-radius:20px;
+      font-size:.7rem;font-weight:600;padding:2px 8px}
+    .dark .slow{background:rgba(220,38,38,.2);color:#fca5a5}
+    .dark .sok{background:rgba(22,163,74,.2);color:#4ade80}
+ 
+    /* Cal */
+    .calhdr{background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(59,130,246,.08));
+      border-radius:10px;padding:8px 12px;margin-bottom:8px}
+    .dark .calhdr{background:rgba(99,102,241,.15)}
+    .calhas .calhdr{background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(59,130,246,.15))}
+ 
+    /* Textarea */
+    .etarea{width:100%;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px;
+      font-size:.875rem;line-height:1.6;resize:vertical;min-height:180px;
+      background:#f8fafc;transition:all .2s;font-family:'DM Sans',sans-serif;color:#1f2937}
+    .etarea:focus{outline:none;border-color:#6366f1;
+      box-shadow:0 0 0 3px rgba(99,102,241,.12);background:white}
+    .dark .etarea{background:rgba(30,41,59,.8);border-color:rgba(99,102,241,.25);color:#e2e8f0}
+ 
+    /* Select */
+    select.inp{appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right 12px center;background-size:16px}
+    .dark select.inp{background-color:rgba(30,41,59,.85)}
+ 
+    /* Opp card */
+    .ocard{background:rgba(255,255,255,.95);border:1px solid rgba(255,255,255,.8);
+      box-shadow:0 2px 12px rgba(99,102,241,.06);transition:all .2s;border-radius:16px}
+    .ocard:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(99,102,241,.12)}
+    .dark .ocard{background:rgba(17,24,39,.92);border:1px solid rgba(99,102,241,.12)}
+ 
+    /* Stat cards */
+    .scard{background:rgba(255,255,255,.95);border:1px solid rgba(255,255,255,.8);
+      box-shadow:0 2px 12px rgba(99,102,241,.06);border-radius:16px;padding:16px;text-align:center}
+    .dark .scard{background:rgba(17,24,39,.92);border:1px solid rgba(99,102,241,.12)}
+  </style>
+</head>
+<body id="bd">
+<div class="mesh"></div>
+ 
+<!-- ═══════════ PAGES ═══════════ -->
+<div id="app"></div>
+ 
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+ 
+<!-- Contact Modal -->
+<div class="moverlay" id="moverlay">
+  <div class="mbox p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="fd text-lg font-bold text-gray-800 dark:text-white" id="morg" style="font-family:Syne,sans-serif"></h3>
+        <p class="text-xs text-gray-400 mt-0.5">Draft your outreach message</p>
+      </div>
+      <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors flex-shrink-0">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Your message</label>
+    <textarea class="etarea dark:text-gray-200" id="mbody"></textarea>
+    <div class="flex gap-3 mt-4">
+      <button onclick="closeModal()" class="btn-o flex-1 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300">Cancel</button>
+      <button onclick="sendMsg()" class="btn-p flex-1 py-2.5 text-sm font-medium">Send Message ✉️</button>
+    </div>
+  </div>
+</div>
+ 
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const ORGS = [
+  {id:1,name:"Green Earth Initiative",cause:"Environment",distance:4,type:"In-person",skills:["Event Planning","Social Media"],description:"Community clean-up and sustainability projects that make a real difference in local ecosystems.",avatar:"🌿",color:"#10b981"},
+  {id:2,name:"Bright Minds Tutoring",cause:"Education",distance:2,type:"Remote",skills:["Tutoring","Writing"],description:"One-on-one tutoring and mentorship for underserved students from K-12 through college prep.",avatar:"📚",color:"#6366f1"},
+  {id:3,name:"Paws & Hearts Rescue",cause:"Animals",distance:7,type:"In-person",skills:["Event Planning"],description:"Animal rescue, fostering programs, and adoption events for cats, dogs, and small animals.",avatar:"🐾",color:"#f59e0b"},
+  {id:4,name:"Bay Area Food Network",cause:"Food Banks",distance:3,type:"In-person",skills:["Event Planning","Social Media"],description:"Fighting food insecurity through weekly food drives, meal prep, and community pantry programs.",avatar:"🍽️",color:"#ef4444"},
+  {id:5,name:"Code for Youth",cause:"Education",distance:6,type:"Hybrid",skills:["Coding","Tutoring","Mentorship"],description:"Teaching coding and digital literacy to youth ages 10-18 through workshops and summer camps.",avatar:"💻",color:"#3b82f6"},
+  {id:6,name:"Sunrise Elder Care",cause:"Elder Care",distance:5,type:"In-person",skills:["Event Planning","Social Media"],description:"Companionship visits, errand support, and recreational activities for seniors living alone.",avatar:"☀️",color:"#f97316"},
+  {id:7,name:"HealthBridge Clinic",cause:"Healthcare",distance:8,type:"In-person",skills:["Writing","Social Media"],description:"Free community health screenings, health education, and patient navigation assistance.",avatar:"💊",color:"#ec4899"},
+  {id:8,name:"Future Leaders Mentorship",cause:"Mentorship",distance:1,type:"Hybrid",skills:["Mentorship","Writing","Event Planning"],description:"Connecting professionals with first-gen college students for career guidance and skill building.",avatar:"🌟",color:"#8b5cf6"}
+];
+ 
+const RAW_OPPS = [
+  {id:101,organizationId:1,title:"Sunnyvale Park Cleanup",daysFromNow:2,time:"9:00 AM – 12:00 PM",spots:12,spotsLeft:4,location:"Sunnyvale Community Park",description:"Help restore native plantings and remove invasive species."},
+  {id:102,organizationId:2,title:"SAT Prep Workshop",daysFromNow:3,time:"2:00 PM – 5:00 PM",spots:8,spotsLeft:3,location:"Online (Zoom)",description:"Lead small group math and reading sessions for 11th graders."},
+  {id:103,organizationId:4,title:"Weekend Food Drive",daysFromNow:4,time:"8:00 AM – 1:00 PM",spots:20,spotsLeft:9,location:"Sunnyvale Community Center",description:"Sort and package food donations for 500+ families in need."},
+  {id:104,organizationId:5,title:"Intro to Python for Teens",daysFromNow:5,time:"10:00 AM – 12:00 PM",spots:6,spotsLeft:2,location:"Castro Middle School",description:"Teach basic programming concepts to curious 7th and 8th graders."},
+  {id:105,organizationId:3,title:"Adoption Day Event",daysFromNow:6,time:"11:00 AM – 3:00 PM",spots:10,spotsLeft:6,location:"Petco Sunnyvale",description:"Help facilitate dog and cat adoptions at our monthly event."},
+  {id:106,organizationId:6,title:"Senior Social Afternoon",daysFromNow:7,time:"1:00 PM – 4:00 PM",spots:8,spotsLeft:5,location:"Sunnyvale Senior Center",description:"Games, conversation, and light activities with elderly residents."},
+  {id:107,organizationId:8,title:"Career Panel & Networking",daysFromNow:8,time:"5:30 PM – 7:30 PM",spots:15,spotsLeft:8,location:"De Anza College",description:"Share your career journey with first-gen college students."},
+  {id:108,organizationId:1,title:"Trail Restoration Day",daysFromNow:9,time:"8:00 AM – 11:00 AM",spots:18,spotsLeft:11,location:"Fremont Older Open Space",description:"Maintain hiking trails and restore erosion-damaged paths."},
+  {id:109,organizationId:7,title:"Free Health Screening",daysFromNow:10,time:"9:00 AM – 2:00 PM",spots:10,spotsLeft:4,location:"El Camino Hospital Annex",description:"Assist with blood pressure checks and health resource handouts."},
+  {id:110,organizationId:2,title:"College Essay Workshop",daysFromNow:11,time:"3:00 PM – 5:30 PM",spots:6,spotsLeft:1,location:"Online (Google Meet)",description:"Guide seniors through drafting and reviewing college application essays."},
+  {id:111,organizationId:5,title:"Web Design for Beginners",daysFromNow:12,time:"1:00 PM – 3:00 PM",spots:8,spotsLeft:5,location:"Cupertino Library",description:"Hands-on HTML/CSS intro for high school students."},
+  {id:112,organizationId:4,title:"Community Meal Prep",daysFromNow:13,time:"10:00 AM – 1:00 PM",spots:14,spotsLeft:7,location:"First Baptist Church Kitchen",description:"Help prepare 200 hot meals for unhoused community members."}
+];
+ 
+// Generate real dates
+const OPPS = RAW_OPPS.map(o => {
+  const d = new Date(); d.setDate(d.getDate() + o.daysFromNow);
+  return {...o, date: d.toISOString().split('T')[0]};
+});
+ 
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let currentPage = 'login';
+let onboardStep = 1;
+let onboardPrefs = {causes:[], type:'', availability:[], distance:10, skills:[]};
+let currentModalOrg = null;
+let activeOrgFilter = null;
+const rsvps = JSON.parse(localStorage.getItem('vc_rsvps') || '{}');
+const sent = JSON.parse(localStorage.getItem('vc_sent') || '{}');
+ 
+// ══════════════════════════════════════════
+// ROUTER
+// ══════════════════════════════════════════
+function route() {
+  const u = localStorage.getItem('vc_user');
+  const p = localStorage.getItem('vc_prefs');
+  if (!u) { render('login'); return; }
+  if (!p) { render('onboarding'); return; }
+  render('dashboard');
+}
+ 
+function render(page) {
+  currentPage = page;
+  const app = document.getElementById('app');
+  if (page === 'login') app.innerHTML = loginHTML();
+  else if (page === 'onboarding') { onboardStep = 1; app.innerHTML = onboardHTML(); updateOnboard(); }
+  else app.innerHTML = dashHTML();
+  applyDark();
+}
+ 
+// ══════════════════════════════════════════
+// DARK MODE
+// ══════════════════════════════════════════
+function applyDark() {
+  const d = localStorage.getItem('vc_dark') === 'true';
+  document.body.classList.toggle('dark', d);
+  document.documentElement.classList.toggle('dark', d);
+  const icon = document.getElementById('darkIcon');
+  if (icon) icon.textContent = d ? '☀️' : '🌙';
+}
+function toggleDark() {
+  const d = !document.body.classList.contains('dark');
+  document.body.classList.toggle('dark', d);
+  document.documentElement.classList.toggle('dark', d);
+  localStorage.setItem('vc_dark', d);
+  const icon = document.getElementById('darkIcon');
+  if (icon) icon.textContent = d ? '☀️' : '🌙';
+}
+ 
+// ══════════════════════════════════════════
+// LOGIN PAGE
+// ══════════════════════════════════════════
+function loginHTML() {
+  return `
+  <div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <button onclick="toggleDark()" class="fixed top-4 right-4 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow hover:shadow-md transition-all" title="Toggle dark mode">
+      <span id="darkIcon">🌙</span>
+    </button>
+    <div class="w-full max-w-md">
+      <div class="text-center mb-8 fu" style="animation-delay:.0s">
+        <div class="inline-flex items-center gap-2 mb-3">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center shadow-lg text-2xl">🤝</div>
+          <h1 class="fd text-2xl font-extrabold text-gray-900 dark:text-white" style="font-family:Syne,sans-serif">VolunteerConnect</h1>
+        </div>
+        <p class="text-gray-500 text-sm">Find your cause. Make your impact.</p>
+      </div>
+      <div class="card p-8 fu" style="animation-delay:.08s">
+        <h2 class="fd text-xl font-bold text-gray-800 dark:text-white mb-1" style="font-family:Syne,sans-serif">Welcome back</h2>
+        <p class="text-gray-500 text-sm mb-6">Sign in to find volunteer opportunities near you.</p>
+        <div id="lform">
+          <div class="mb-4">
+            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Email address</label>
+            <input type="email" id="lemail" placeholder="you@example.com" class="inp"
+              onkeydown="if(event.key==='Enter')doLogin()"/>
+            <p class="text-red-400 text-xs mt-1 hidden" id="lerr1">Please enter a valid email.</p>
+          </div>
+          <div class="mb-6">
+            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
+            <input type="password" id="lpass" placeholder="••••••••" class="inp"
+              onkeydown="if(event.key==='Enter')doLogin()"/>
+            <p class="text-red-400 text-xs mt-1 hidden" id="lerr2">Password must be at least 6 characters.</p>
+          </div>
+          <button onclick="doLogin()" class="btn-p w-full py-3 text-sm font-medium mb-3">Sign In →</button>
+          <button onclick="guestLogin()" class="btn-o w-full py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Continue as Guest</button>
+        </div>
+        <p class="text-center text-xs text-gray-400 mt-5">Hint: any email + password (6+ chars)</p>
+      </div>
+      <div class="flex flex-wrap gap-2 justify-center mt-5 fu" style="animation-delay:.15s">
+        ${['🌿 Environment','📚 Education','🍽️ Food Banks','🐾 Animals','💊 Healthcare'].map(t=>`
+          <span class="px-3 py-1.5 rounded-full bg-white/70 dark:bg-gray-800/70 text-xs text-gray-600 dark:text-gray-300 shadow-sm border border-white/50">${t}</span>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+ 
+function doLogin() {
+  const email = document.getElementById('lemail').value.trim();
+  const pass = document.getElementById('lpass').value;
+  let ok = true;
+  document.getElementById('lerr1').classList.toggle('hidden', email.includes('@'));
+  document.getElementById('lerr2').classList.toggle('hidden', pass.length >= 6);
+  if (!email.includes('@')) ok = false;
+  if (pass.length < 6) ok = false;
+  if (!ok) {
+    document.getElementById('lform').classList.add('shake');
+    setTimeout(() => document.getElementById('lform').classList.remove('shake'), 400);
+    return;
+  }
+  const name = email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  localStorage.setItem('vc_user', JSON.stringify({email, name, loggedIn:true}));
+  route();
+}
+ 
+function guestLogin() {
+  localStorage.setItem('vc_user', JSON.stringify({email:'guest@example.com', name:'Guest User', loggedIn:true}));
+  route();
+}
+ 
+// ══════════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════════
+function onboardHTML() {
+  return `
+  <div class="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+    <button onclick="toggleDark()" class="fixed top-4 right-4 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow hover:shadow-md transition-all">
+      <span id="darkIcon">🌙</span>
+    </button>
+    <div class="w-full max-w-lg">
+      <div class="text-center mb-6">
+        <button onclick="render('login')" class="inline-flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white text-sm">🤝</div>
+          <span class="fd font-bold text-gray-800 dark:text-white" style="font-family:Syne,sans-serif">VolunteerConnect</span>
+        </button>
+        <h2 class="fd text-2xl font-bold text-gray-900 dark:text-white mb-1" style="font-family:Syne,sans-serif">Let's find your match</h2>
+        <p class="text-gray-500 text-sm">Answer a few quick questions to personalize your experience.</p>
+      </div>
+      <!-- Step indicators -->
+      <div class="flex items-center justify-center gap-2 mb-4">
+        ${[1,2,3,4,5].map((n,i) => `
+          <div class="sind" id="si${n}">${n}</div>
+          ${i<4?'<div class="w-8 h-0.5 bg-gray-200 dark:bg-gray-700"></div>':''}`).join('')}
+      </div>
+      <div class="prog mb-5"><div class="prog-f" id="pbar" style="width:20%"></div></div>
+      <div class="card p-7">
+        <!-- Step 1 -->
+        <div id="os1" class="sr">
+          <h3 class="fd text-lg font-bold text-gray-800 dark:text-white mb-1" style="font-family:Syne,sans-serif">What causes are you passionate about?</h3>
+          <p class="text-gray-500 text-sm mb-4">Select all that apply.</p>
+          <div class="flex flex-wrap gap-2">
+            ${['🌿 Environment','📚 Education','🐾 Animals','🍽️ Food Banks','💊 Healthcare','☀️ Elder Care','🌟 Mentorship'].map(c=>{
+              const v=c.split(' ').slice(1).join(' ');
+              return `<button class="ch" data-v="${v}" onclick="toggleCh(this,'c')">${c}</button>`;
+            }).join('')}
+          </div>
+          <p class="text-red-400 text-xs mt-2 hidden" id="oerr1">Select at least one cause.</p>
+        </div>
+        <!-- Step 2 -->
+        <div id="os2" class="sr hidden">
+          <h3 class="fd text-lg font-bold text-gray-800 dark:text-white mb-1" style="font-family:Syne,sans-serif">How do you prefer to volunteer?</h3>
+          <p class="text-gray-500 text-sm mb-4">Choose your preferred format.</p>
+          <div class="flex flex-col gap-3">
+            ${[['In-person','🏠','Show up and make a hands-on difference'],['Remote','💻','Volunteer from anywhere, anytime'],['Hybrid','🔀','A mix of both worlds']].map(([v,e,d])=>`
+              <button class="ch" data-v="${v}" onclick="singleCh(this,'t')">
+                <div class="font-semibold mb-0.5">${e} ${v}</div>
+                <div class="text-xs text-gray-400 dark:text-gray-500">${d}</div>
+              </button>`).join('')}
+          </div>
+          <p class="text-red-400 text-xs mt-2 hidden" id="oerr2">Select a volunteer type.</p>
+        </div>
+        <!-- Step 3 -->
+        <div id="os3" class="sr hidden">
+          <h3 class="fd text-lg font-bold text-gray-800 dark:text-white mb-1" style="font-family:Syne,sans-serif">When are you available?</h3>
+          <p class="text-gray-500 text-sm mb-4">Select all that apply.</p>
+          <div class="flex flex-wrap gap-2">
+            ${['📅 Weekdays','🎉 Weekends','🌅 Mornings','🌤️ Afternoons','🌙 Evenings'].map(c=>{
+              const v=c.split(' ').slice(1).join(' ');
+              return `<button class="ch" data-v="${v}" onclick="toggleCh(this,'a')">${c}</button>`;
+            }).join('')}
+          </div>
+          <p class="text-red-400 text-xs mt-2 hidden" id="oerr3">Select at least one time slot.</p>
+        </div>
+        <!-- Step 4 -->
+        <div id="os4" class="sr hidden">
+          <h3 class="fd text-lg font-bold text-gray-800 dark:text-white mb-1" style="font-family:Syne,sans-serif">How far are you willing to travel?</h3>
+          <p class="text-gray-500 text-sm mb-4">For in-person opportunities near Sunnyvale, CA.</p>
+          <select id="odist" class="inp">
+            <option value="5">📍 Within 5 miles</option>
+            <option value="10" selected>📍 Within 10 miles</option>
+            <option value="25">📍 Within 25 miles</option>
+          </select>
+        </div>
+        <!-- Step 5 -->
+        <div id="os5" class="sr hidden">
+          <h3 class="fd text-lg font-bold text-gray-800 dark:text-white mb-1" style="font-family:Syne,sans-serif">What skills can you offer?</h3>
+          <p class="text-gray-500 text-sm mb-4">Help us find the best fit for your talents.</p>
+          <div class="flex flex-wrap gap-2">
+            ${['🎓 Tutoring','💻 Coding','✍️ Writing','🎪 Event Planning','📱 Social Media','🌟 Mentorship'].map(c=>{
+              const v=c.split(' ').slice(1).join(' ');
+              return `<button class="ch" data-v="${v}" onclick="toggleCh(this,'s')">${c}</button>`;
+            }).join('')}
+          </div>
+          <p class="text-xs text-gray-400 mt-2">Optional — skip if you're open to anything!</p>
+        </div>
+        <!-- Nav -->
+        <div class="flex gap-3 mt-7">
+          <button id="obk" onclick="prevOnboard()" class="btn-o px-5 py-3 text-gray-600 dark:text-gray-300 text-sm font-medium hidden">← Back</button>
+          <button id="onxt" onclick="nextOnboard()" class="btn-p flex-1 py-3 text-sm font-medium">Continue →</button>
+        </div>
+      </div>
+      <p class="text-center text-xs text-gray-400 mt-3">Step <span id="ostepn">1</span> of 5</p>
+    </div>
+  </div>`;
+}
+ 
+// Onboard state selectors (use prefixes to avoid collisions)
+const choiceGroups = {c:[], t:[], a:[], s:[]};
+ 
+function toggleCh(btn, grp) {
+  btn.classList.toggle('on');
+}
+function singleCh(btn, grp) {
+  const siblings = btn.parentElement.querySelectorAll('.ch');
+  siblings.forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function getChosen(container, grp) {
+  return [...container.querySelectorAll('.ch.on')].map(b => b.dataset.v);
+}
+ 
+function updateOnboard() {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById(`si${i}`);
+    if (!el) continue;
+    el.className = 'sind ' + (i < onboardStep ? 'sind-d' : i === onboardStep ? 'sind-a' : 'sind-u');
+    el.textContent = i < onboardStep ? '✓' : i;
+  }
+  const pbar = document.getElementById('pbar');
+  if (pbar) pbar.style.width = (onboardStep * 20) + '%';
+  const stepn = document.getElementById('ostepn');
+  if (stepn) stepn.textContent = onboardStep;
+  const bk = document.getElementById('obk');
+  if (bk) bk.classList.toggle('hidden', onboardStep === 1);
+  const nxt = document.getElementById('onxt');
+  if (nxt) nxt.textContent = onboardStep === 5 ? 'Find My Matches →' : 'Continue →';
+}
+ 
+function nextOnboard() {
+  const step = document.getElementById(`os${onboardStep}`);
+  if (onboardStep === 1) {
+    const chosen = [...step.querySelectorAll('.ch.on')].map(b => b.dataset.v);
+    if (!chosen.length) { document.getElementById('oerr1').classList.remove('hidden'); return; }
+    document.getElementById('oerr1').classList.add('hidden');
+    onboardPrefs.causes = chosen;
+  } else if (onboardStep === 2) {
+    const chosen = [...step.querySelectorAll('.ch.on')].map(b => b.dataset.v);
+    if (!chosen.length) { document.getElementById('oerr2').classList.remove('hidden'); return; }
+    document.getElementById('oerr2').classList.add('hidden');
+    onboardPrefs.type = chosen[0];
+  } else if (onboardStep === 3) {
+    const chosen = [...step.querySelectorAll('.ch.on')].map(b => b.dataset.v);
+    if (!chosen.length) { document.getElementById('oerr3').classList.remove('hidden'); return; }
+    document.getElementById('oerr3').classList.add('hidden');
+    onboardPrefs.availability = chosen;
+  } else if (onboardStep === 4) {
+    onboardPrefs.distance = parseInt(document.getElementById('odist').value);
+  } else if (onboardStep === 5) {
+    onboardPrefs.skills = [...step.querySelectorAll('.ch.on')].map(b => b.dataset.v);
+    localStorage.setItem('vc_prefs', JSON.stringify(onboardPrefs));
+    render('dashboard');
+    return;
+  }
+  step.classList.add('hidden');
+  onboardStep++;
+  const next = document.getElementById(`os${onboardStep}`);
+  next.classList.remove('hidden');
+  next.classList.add('sr');
+  updateOnboard();
+}
+ 
+function prevOnboard() {
+  if (onboardStep <= 1) return;
+  document.getElementById(`os${onboardStep}`).classList.add('hidden');
+  onboardStep--;
+  document.getElementById(`os${onboardStep}`).classList.remove('hidden');
+  updateOnboard();
+}
+ 
+// ══════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════
+let activeTab = 'orgs';
+ 
+function dashHTML() {
+  const user = JSON.parse(localStorage.getItem('vc_user') || '{}');
+  const prefs = JSON.parse(localStorage.getItem('vc_prefs') || '{}');
+  const hr = new Date().getHours();
+  const greeting = hr < 12 ? 'morning' : hr < 17 ? 'afternoon' : 'evening';
+  const fname = (user.name || 'Friend').split(' ')[0];
+  const init = fname[0].toUpperCase();
+ 
+  return `
+  <!-- Header -->
+  <header class="hdr px-4 py-3">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white text-sm shadow">🤝</div>
+        <span class="fd font-bold text-gray-800 dark:text-white text-lg hidden sm:block" style="font-family:Syne,sans-serif">VolunteerConnect</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800">
+          <div class="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-400 to-blue-400 flex items-center justify-center">
+            <span class="text-white text-xs font-bold">${init}</span>
+          </div>
+          <span class="text-sm text-gray-700 dark:text-gray-300 font-medium hidden sm:block">${fname}</span>
+        </div>
+        <button onclick="toggleDark()" class="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="Toggle dark mode">
+          <span id="darkIcon">🌙</span>
+        </button>
+        <button onclick="doLogout()" class="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-400" title="Log out">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+ 
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto px-4 py-8 relative z-10">
+    <!-- Welcome -->
+    <div class="mb-7 fu" style="animation-delay:0s">
+      <h1 class="fd text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-1" style="font-family:Syne,sans-serif">Good ${greeting}, ${fname}! 👋</h1>
+      <p class="text-gray-500 text-sm">Here are your personalized volunteer matches.</p>
+    </div>
+ 
+    <!-- Stats -->
+    <div class="grid grid-cols-3 gap-3 mb-7 fu" style="animation-delay:.05s">
+      <div class="scard">
+        <div class="fd text-2xl font-extrabold text-indigo-600 dark:text-indigo-400" id="stO" style="font-family:Syne,sans-serif">—</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Matches</div>
+      </div>
+      <div class="scard">
+        <div class="fd text-2xl font-extrabold text-blue-600 dark:text-blue-400" id="stE" style="font-family:Syne,sans-serif">${OPPS.length}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Events</div>
+      </div>
+      <div class="scard">
+        <div class="fd text-2xl font-extrabold text-emerald-600 dark:text-emerald-400" id="stR" style="font-family:Syne,sans-serif">${Object.values(rsvps).filter(Boolean).length}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">RSVPs</div>
+      </div>
+    </div>
+ 
+    <!-- Tabs -->
+    <div class="flex gap-1.5 mb-6 p-1 bg-white/70 dark:bg-gray-800/70 rounded-2xl backdrop-blur-sm border border-white/50 dark:border-gray-700/50 w-fit fu" style="animation-delay:.1s">
+      <button class="tab on" id="tab-orgs" onclick="switchTab('orgs')">🏢 Organizations</button>
+      <button class="tab" id="tab-opps" onclick="switchTab('opps')">📅 Opportunities</button>
+      <button class="tab" id="tab-cal" onclick="switchTab('cal')">🗓️ Calendar</button>
+    </div>
+ 
+    <!-- Panels -->
+    <div id="panel-orgs"></div>
+    <div id="panel-opps" class="hidden"></div>
+    <div id="panel-cal" class="hidden"></div>
+  </main>`;
+}
+ 
+function initDashboard() {
+  const prefs = JSON.parse(localStorage.getItem('vc_prefs') || '{}');
+  const scored = ORGS.map(o => ({...o, score: calcMatch(o, prefs)})).sort((a,b) => b.score - a.score);
+  const matchCount = scored.filter(o => o.score > 0).length || scored.length;
+  const stO = document.getElementById('stO');
+  if (stO) stO.textContent = matchCount;
+ 
+  // Skeleton then render
+  const panel = document.getElementById('panel-orgs');
+  if (!panel) return;
+  panel.innerHTML = `<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    ${[0,1,2].map(()=>`<div class="org-card p-5"><div class="skel h-4 w-3/4 mb-3"></div><div class="skel h-3 w-1/2 mb-2"></div><div class="skel h-16 w-full mb-3"></div><div class="skel h-8 w-full"></div></div>`).join('')}
+  </div>`;
+ 
+  setTimeout(() => {
+    renderOrgs(scored);
+    renderOpps();
+    renderCal();
+    switchTab(activeTab);
+  }, 600);
+}
+ 
+function calcMatch(org, prefs) {
+  let s = 0;
+  if (prefs.causes && prefs.causes.includes(org.cause)) s += 40;
+  if (prefs.type && org.type === prefs.type) s += 20;
+  if (prefs.skills && org.skills && prefs.skills.some(sk => org.skills.includes(sk))) s += 20;
+  if (prefs.distance && org.distance <= prefs.distance) s += 20;
+  return s;
+}
+ 
+function causeStyle(cause) {
+  const m = {
+    Environment:'background:#dcfce7;color:#16a34a',
+    Education:'background:#ede9fe;color:#6d28d9',
+    Animals:'background:#fef3c7;color:#b45309',
+    'Food Banks':'background:#fee2e2;color:#dc2626',
+    Healthcare:'background:#fce7f3;color:#be185d',
+    'Elder Care':'background:#ffedd5;color:#c2410c',
+    Mentorship:'background:#f3e8ff;color:#7c3aed'
+  };
+  return m[cause] || 'background:#f1f5f9;color:#64748b';
+}
+ 
+function renderOrgs(scored) {
+  const panel = document.getElementById('panel-orgs');
+  if (!panel) return;
+  panel.innerHTML = `<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4" id="ogrid">
+    ${scored.map((org, i) => `
+      <div class="org-card p-5 fu" style="animation-delay:${i*.07}s">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-xl shadow-sm" style="background:${org.color}22;border:2px solid ${org.color}33">${org.avatar}</div>
+            <div>
+              <h3 class="fd font-bold text-gray-800 dark:text-white text-sm leading-tight" style="font-family:Syne,sans-serif">${org.name}</h3>
+              <span class="text-xs px-2 py-0.5 rounded-full font-semibold mt-0.5 inline-block" style="${causeStyle(org.cause)}">${org.cause}</span>
+            </div>
+          </div>
+          <div class="mbadge">${org.score}%</div>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-3" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${org.description}</p>
+        <div class="flex items-center gap-3 text-xs text-gray-400 mb-4">
+          <span>📍 ${org.distance} mi</span><span>•</span><span>${org.type}</span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="openModal(${org.id})" class="btn-p flex-1 py-2 text-xs font-medium ${sent[org.id]?'opacity-60':''}" id="cbtn-${org.id}">
+            ${sent[org.id]?'✓ Sent':'✉️ Contact'}
+          </button>
+          <button onclick="switchTab('opps');filterOrg(${org.id})" class="btn-o flex-1 py-2 text-xs font-medium text-gray-600 dark:text-gray-300">
+            View Events
+          </button>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+ 
+function renderOpps(filterOrgId = null) {
+  const panel = document.getElementById('panel-opps');
+  if (!panel) return;
+  const list = filterOrgId ? OPPS.filter(o => o.organizationId === filterOrgId) : OPPS;
+ 
+  if (!list.length) {
+    panel.innerHTML = '<div class="text-center text-gray-400 dark:text-gray-500 py-16 text-sm">No opportunities found.</div>';
+    return;
+  }
+ 
+  panel.innerHTML = `<div class="space-y-3">
+    ${list.map((opp, i) => {
+      const org = ORGS.find(o => o.id === opp.organizationId);
+      const isRsvped = rsvps[opp.id];
+      const low = opp.spotsLeft <= 3;
+      const d = new Date(opp.date + 'T12:00:00');
+      const ds = d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+      return `
+      <div class="ocard p-4 fu" style="animation-delay:${i*.05}s">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style="background:${org?.color||'#6366f1'}22">${org?.avatar||'📋'}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-2 flex-wrap">
+              <div>
+                <h4 class="fd font-bold text-gray-800 dark:text-white text-sm" style="font-family:Syne,sans-serif">${opp.title}</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400">${org?.name||''}</p>
+              </div>
+              <span class="${low?'slow':'sok'}">${opp.spotsLeft} spots left</span>
+            </div>
+            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 dark:text-gray-500 mt-2">
+              <span>📅 ${ds}</span><span>🕐 ${opp.time}</span><span>📍 ${opp.location}</span>
+            </div>
+            <div class="flex items-center justify-between mt-3">
+              <p class="text-xs text-gray-400 dark:text-gray-500 flex-1 mr-3">${opp.description}</p>
+              <button onclick="doRsvp(${opp.id},this)" class="btn-g ${isRsvped?'rsvped':''} px-4 py-2 text-xs font-medium flex-shrink-0">
+                ${isRsvped?'✓ Registered':'RSVP'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  ${filterOrgId ? `<div class="mt-4 text-center"><button onclick="filterOrg(null)" class="btn-o px-5 py-2 text-sm text-gray-500 dark:text-gray-400">← Show all opportunities</button></div>` : ''}`;
+}
+ 
+function renderCal() {
+  const panel = document.getElementById('panel-cal');
+  if (!panel) return;
+  const today = new Date();
+  let html = '';
+ 
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(today); d.setDate(d.getDate() + i);
+    const ds = d.toISOString().split('T')[0];
+    const dayOpps = OPPS.filter(o => o.date === ds);
+    const has = dayOpps.length > 0;
+    const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' :
+      d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+ 
+    html += `<div class="mb-3 ${has?'calhas':''}">`;
+    html += `<div class="calhdr flex items-center justify-between">
+      <span class="fd font-bold text-gray-800 dark:text-white text-sm" style="font-family:Syne,sans-serif">${label}</span>
+      ${has?`<span class="text-xs text-indigo-600 dark:text-indigo-400 font-medium">${dayOpps.length} event${dayOpps.length>1?'s':''}</span>`:`<span class="text-xs text-gray-400">No events</span>`}
+    </div>`;
+ 
+    if (has) {
+      html += `<div class="space-y-2 ml-2">`;
+      dayOpps.forEach(opp => {
+        const org = ORGS.find(o => o.id === opp.organizationId);
+        const isRsvped = rsvps[opp.id];
+        html += `
+          <div class="ocard p-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style="background:${org?.color||'#6366f1'}22">${org?.avatar||'📋'}</div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-800 dark:text-white truncate">${opp.title}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500">${opp.time} · ${opp.location}</p>
+            </div>
+            <button onclick="doRsvp(${opp.id},this)" class="btn-g ${isRsvped?'rsvped':''} px-3 py-1.5 text-xs font-medium flex-shrink-0">
+              ${isRsvped?'✓':'RSVP'}
+            </button>
+          </div>`;
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  panel.innerHTML = html;
+}
+ 
+function switchTab(name) {
+  activeTab = name;
+  ['orgs','opps','cal'].forEach(t => {
+    const p = document.getElementById(`panel-${t}`);
+    const b = document.getElementById(`tab-${t}`);
+    if (p) p.classList.toggle('hidden', t !== name);
+    if (b) b.classList.toggle('on', t === name);
+  });
+}
+ 
+function filterOrg(id) {
+  activeOrgFilter = id;
+  renderOpps(id);
+}
+ 
+// ══════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════
+function openModal(orgId) {
+  currentModalOrg = ORGS.find(o => o.id === orgId);
+  const user = JSON.parse(localStorage.getItem('vc_user') || '{}');
+  document.getElementById('morg').textContent = currentModalOrg.name;
+  document.getElementById('mbody').value =
+`Hi ${currentModalOrg.name} team,
+ 
+My name is ${user.name || 'a passionate volunteer'}, and I'm interested in getting involved with your organization. I'm especially passionate about ${currentModalOrg.cause.toLowerCase()} and believe I can make a real contribution.
+ 
+I'd love to learn more about volunteer opportunities available over the next two weeks. Please feel free to reach out at ${user.email || 'my email'}.
+ 
+Thank you for the incredible work you do!
+ 
+Warm regards,
+${user.name || 'Volunteer'}`;
+  document.getElementById('moverlay').classList.add('open');
+}
+ 
+function closeModal() {
+  document.getElementById('moverlay').classList.remove('open');
+  currentModalOrg = null;
+}
+ 
+function sendMsg() {
+  if (!currentModalOrg) return;
+  sent[currentModalOrg.id] = true;
+  localStorage.setItem('vc_sent', JSON.stringify(sent));
+  closeModal();
+  toast('✉️ Message sent to ' + currentModalOrg.name + '!');
+  // Update button
+  const btn = document.getElementById(`cbtn-${currentModalOrg.id}`);
+  if (btn) { btn.textContent = '✓ Sent'; btn.classList.add('opacity-60'); }
+}
+ 
+// ══════════════════════════════════════════
+// RSVP
+// ══════════════════════════════════════════
+function doRsvp(oppId, btn) {
+  if (rsvps[oppId]) {
+    rsvps[oppId] = false;
+    btn.classList.remove('rsvped');
+    btn.textContent = 'RSVP';
+    toast('📅 RSVP cancelled.');
+  } else {
+    rsvps[oppId] = true;
+    btn.classList.add('rsvped');
+    btn.textContent = btn.offsetWidth < 60 ? '✓' : '✓ Registered';
+    const opp = OPPS.find(o => o.id === oppId);
+    toast('🎉 Registered for ' + (opp?.title || 'this event') + '!');
+  }
+  localStorage.setItem('vc_rsvps', JSON.stringify(rsvps));
+  const stR = document.getElementById('stR');
+  if (stR) stR.textContent = Object.values(rsvps).filter(Boolean).length;
+}
+ 
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.classList.remove('show'), 3000);
+}
+ 
+function doLogout() {
+  localStorage.removeItem('vc_user');
+  route();
+}
+ 
+// Modal backdrop close
+document.getElementById('moverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+ 
+// ══════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════
+// Observe DOM for dashboard render
+const observer = new MutationObserver(() => {
+  if (currentPage === 'dashboard' && document.getElementById('panel-orgs')) {
+    observer.disconnect();
+    initDashboard();
+  }
+});
+observer.observe(document.getElementById('app'), {childList: true, subtree: true});
+ 
+route();
+</script>
+</body>
+</html>
