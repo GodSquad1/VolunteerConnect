@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Heart, PawPrint, Leaf, BookOpen } from 'lucide-react';
 import IntakeStep from '../components/IntakeStep';
 import OptionCard from '../components/OptionCard';
+import { generateMatchNote } from '../lib/gemini';
 
 const impactOptions = [
   { icon: Heart, label: 'Help people directly', description: 'Work hands-on with people in need' },
@@ -52,25 +53,45 @@ export default function VolunteerIntake() {
     return false;
   };
 
+  const goNext = () => {
+    setDirection(1);
+    setStep((s) => s + 1);
+  };
+
   const handleContinue = () => {
     if (!canContinue()) return;
-    if (step < 4) {
-      setDirection(1);
-      setStep(step + 1);
-    } else {
-      startLoading();
-    }
+    if (step < 4) goNext();
+    else startLoading();
   };
 
   const handleBack = () => {
     if (step > 1) {
       setDirection(-1);
-      setStep(step - 1);
+      setStep((s) => s - 1);
     }
+  };
+
+  // Step 1: auto-advance after brief highlight delay
+  const handleImpactSelect = (label) => {
+    setSelectedImpact(label);
+    setTimeout(() => goNext(), 320);
   };
 
   const startLoading = () => {
     setIsLoading(true);
+    // Call Gemini to generate personalized match note in the background
+    generateMatchNote({
+      impact: selectedImpact,
+      skills: selectedSkills,
+      motivation,
+    })
+      .then((note) => {
+        sessionStorage.setItem('matchNote', note);
+      })
+      .catch(() => {
+        // Fallback to mock note if API fails — silently
+      });
+
     let idx = 0;
     const interval = setInterval(() => {
       idx++;
@@ -171,7 +192,7 @@ export default function VolunteerIntake() {
                     label={opt.label}
                     description={opt.description}
                     selected={selectedImpact === opt.label}
-                    onClick={() => setSelectedImpact(opt.label)}
+                    onClick={() => handleImpactSelect(opt.label)}
                   />
                 ))}
               </div>
@@ -274,22 +295,26 @@ export default function VolunteerIntake() {
         </AnimatePresence>
       </div>
 
-      {/* Continue button */}
+      {/* Continue button — hidden on step 1 (auto-advances) */}
       <div className="px-8 pb-12">
         <div className="max-w-2xl mx-auto">
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={handleContinue}
-            disabled={!canContinue()}
-            className={`flex items-center gap-2 px-6 py-3 rounded-btn font-semibold text-sm transition-all ${
-              canContinue()
-                ? 'bg-primary text-bg hover:opacity-90'
-                : 'bg-surface border border-border text-text-tertiary cursor-not-allowed'
-            }`}
-          >
-            Continue
-            <ArrowRight size={16} />
-          </motion.button>
+          {step === 1 ? (
+            <p className="text-xs text-text-tertiary">Select an option to continue</p>
+          ) : (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={handleContinue}
+              disabled={!canContinue()}
+              className={`flex items-center gap-2 px-6 py-3 rounded-btn font-semibold text-sm transition-all ${
+                canContinue()
+                  ? 'bg-primary text-bg hover:opacity-90'
+                  : 'bg-surface border border-border text-text-tertiary cursor-not-allowed'
+              }`}
+            >
+              {step === 4 ? 'Find my match' : 'Continue'}
+              <ArrowRight size={16} />
+            </motion.button>
+          )}
         </div>
       </div>
     </div>

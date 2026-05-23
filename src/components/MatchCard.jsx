@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Calendar, Users } from 'lucide-react';
@@ -5,6 +6,29 @@ import { matchResult } from '../data/mockData';
 
 export default function MatchCard() {
   const navigate = useNavigate();
+  const [personalNote, setPersonalNote] = useState(null);
+
+  useEffect(() => {
+    // Try to get the Gemini-generated note; poll briefly since it may still be generating
+    const tryGet = () => {
+      const stored = sessionStorage.getItem('matchNote');
+      if (stored) {
+        setPersonalNote(stored);
+        return true;
+      }
+      return false;
+    };
+
+    if (!tryGet()) {
+      // Poll every 400ms for up to 8s while Gemini is still responding
+      let attempts = 0;
+      const poll = setInterval(() => {
+        attempts++;
+        if (tryGet() || attempts > 20) clearInterval(poll);
+      }, 400);
+      return () => clearInterval(poll);
+    }
+  }, []);
 
   return (
     <motion.div
@@ -61,10 +85,29 @@ export default function MatchCard() {
         </h2>
 
         {/* Personal note */}
-        <div className="border-l-2 border-primary pl-4 bg-primary-dim/30 rounded-r-btn py-3 pr-3">
-          <p className="text-sm text-text-secondary leading-relaxed italic">
-            "{matchResult.personalNote}"
-          </p>
+        <div className="border-l-2 border-primary pl-4 bg-primary-dim/30 rounded-r-btn py-3 pr-3 min-h-[72px]">
+          {personalNote ? (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="text-sm text-text-secondary leading-relaxed italic"
+            >
+              "{personalNote}"
+            </motion.p>
+          ) : (
+            <div className="space-y-2 py-1">
+              {[90, 75, 50].map((w, i) => (
+                <motion.div
+                  key={i}
+                  className="h-3 bg-primary-dim rounded-full"
+                  style={{ width: `${w}%` }}
+                  animate={{ opacity: [0.4, 0.7, 0.4] }}
+                  transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.2 }}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Details */}

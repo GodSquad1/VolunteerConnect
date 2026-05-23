@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
+import Auth from './pages/Auth';
 import VolunteerIntake from './pages/VolunteerIntake';
 import VolunteerMatch from './pages/VolunteerMatch';
 import VolunteerConfirmed from './pages/VolunteerConfirmed';
@@ -12,6 +13,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/auth" element={<Auth />} />
         <Route path="/volunteer/intake" element={<VolunteerIntake />} />
         <Route path="/volunteer/match" element={<VolunteerMatch />} />
         <Route path="/volunteer/confirmed" element={<VolunteerConfirmed />} />
