@@ -6,6 +6,8 @@ import {
   signOut,
   updateProfile,
   onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
 } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -20,6 +22,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
 
 export {
   signInWithEmailAndPassword,
@@ -27,4 +30,5 @@ export {
   signOut,
   updateProfile,
   onAuthStateChanged,
+  signInWithPopup,
 };
