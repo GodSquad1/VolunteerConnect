@@ -526,6 +526,13 @@ export default function Landing() {
       <footer className="border-t border-border px-10 py-6 flex items-center justify-between">
         <span className="text-sm font-semibold tracking-heading text-text-primary">VolunteerConnect</span>
         <span className="text-xs text-text-tertiary">Built for people who actually show up.</span>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => navigate('/pitch')}
+          className="text-xs px-3 py-1.5 border border-border text-text-tertiary hover:border-border-bright hover:text-text-primary rounded-btn transition-colors"
+        >
+          pitch
+        </motion.button>
       </footer>
     </div>
   );

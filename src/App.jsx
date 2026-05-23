@@ -15,6 +15,7 @@ import OpportunityDetail from './pages/OpportunityDetail';
 import CoordinatorDashboard from './pages/CoordinatorDashboard';
 import CoordinatorVolunteers from './pages/CoordinatorVolunteers';
 import CoordinatorShifts from './pages/CoordinatorShifts';
+import Pitch from './pages/Pitch';
 import SurgeForm from './pages/SurgeForm';
 import SurgeLive from './pages/SurgeLive';
 
@@ -99,6 +100,7 @@ function AppRoutes() {
       <Route path="/coordinator/shifts" element={<CoordinatorRoute><CoordinatorShifts /></CoordinatorRoute>} />
       <Route path="/coordinator/surge" element={<CoordinatorRoute><SurgeForm /></CoordinatorRoute>} />
       <Route path="/coordinator/surge/live" element={<CoordinatorRoute><SurgeLive /></CoordinatorRoute>} />
+      <Route path="/pitch" element={<Pitch />} />
     </Routes>
   );
 }
