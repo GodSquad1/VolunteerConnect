@@ -18,10 +18,11 @@ const navItems = [
   { icon: Zap, label: 'Surge Mode', path: '/coordinator/surge' },
 ];
 
-export default function CoordinatorLayout({ children }) {
+export default function CoordinatorLayout({ children, org: orgProp }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const org = orgProp || { name: 'My Organization', location: '', initials: 'VC', color: '#4ADE80' };
 
   const handleSignOut = async () => {
     await signOut();
@@ -70,11 +71,11 @@ export default function CoordinatorLayout({ children }) {
           <div className="flex items-center gap-3">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-bg shrink-0"
-              style={{ backgroundColor: org.color }}
+              style={{ backgroundColor: org.color || '#FB923C' }}
             >
               {user?.displayName
                 ? user.displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
-                : org.initials}
+                : (org.logoInitials || org.initials || 'VC')}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-text-primary truncate">
@@ -82,8 +83,7 @@ export default function CoordinatorLayout({ children }) {
               </p>
               <p className="text-xs text-text-tertiary truncate">
                 {user?.email || org.location}
-              </p>
-            </div>
+              </p>            </div>
           </div>
           <motion.button
             whileTap={{ scale: 0.97 }}

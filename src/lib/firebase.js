@@ -6,11 +6,11 @@ import {
   signOut,
   updateProfile,
   onAuthStateChanged,
-  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   GoogleAuthProvider,
 } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAqBlEfeDDpk8Qp4Dx8w6vPTAr2FfmPGpk',
@@ -24,6 +24,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
 
 export {
@@ -32,7 +33,6 @@ export {
   signOut,
   updateProfile,
   onAuthStateChanged,
-  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
 };

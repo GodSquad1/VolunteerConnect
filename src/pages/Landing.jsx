@@ -344,7 +344,7 @@ export default function Landing() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => navigate('/auth?role=volunteer&next=/volunteer/intake')}
+              onClick={() => navigate('/auth?role=volunteer&next=/volunteer/search')}
               className="flex items-center gap-2 px-7 py-3.5 bg-primary text-bg rounded-btn font-semibold text-sm shadow-[0_0_24px_rgba(74,222,128,0.25)] hover:shadow-[0_0_32px_rgba(74,222,128,0.35)] transition-shadow"
             >
               <Users size={15} />
