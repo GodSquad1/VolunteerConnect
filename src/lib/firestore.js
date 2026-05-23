@@ -78,20 +78,37 @@ export async function signUpForOpportunity(userId, userName, userEmail, opportun
   );
   if (!existing.empty) return existing.docs[0].id;
 
+  // Check opportunity's autoAccept setting
+  const oppSnap = await getDoc(doc(db, 'opportunities', opportunityId));
+  const autoAccept = oppSnap.exists() ? (oppSnap.data().autoAccept !== false) : true;
+
   const ref = await addDoc(signupsCol(), {
     userId, userName, userEmail,
     opportunityId, orgId, orgName, oppTitle,
-    status: 'confirmed',
+    status: autoAccept ? 'confirmed' : 'pending',
     hoursLogged: 0,
     signedUpAt: serverTimestamp(),
   });
 
-  // Increment filled slots
+  // Only increment filled slots if auto-confirmed
+  if (autoAccept) {
+    await updateDoc(doc(db, 'opportunities', opportunityId), {
+      filledSlots: increment(1),
+    });
+  }
+
+  return ref.id;
+}
+
+export async function approveSignup(signupId, opportunityId) {
+  await updateDoc(doc(db, 'signups', signupId), { status: 'confirmed' });
   await updateDoc(doc(db, 'opportunities', opportunityId), {
     filledSlots: increment(1),
   });
+}
 
-  return ref.id;
+export async function rejectSignup(signupId) {
+  await updateDoc(doc(db, 'signups', signupId), { status: 'cancelled' });
 }
 
 export async function getUserSignups(userId) {

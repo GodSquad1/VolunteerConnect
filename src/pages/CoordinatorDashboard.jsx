@@ -18,6 +18,7 @@ function CreateOpportunityModal({ orgId, orgName, location, onClose, onCreated }
   const [time, setTime] = useState('');
   const [slots, setSlots] = useState(10);
   const [skills, setSkills] = useState('');
+  const [autoAccept, setAutoAccept] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -32,6 +33,7 @@ function CreateOpportunityModal({ orgId, orgName, location, onClose, onCreated }
         skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
         impact: 'Help people directly',
         createdBy: orgId,
+        autoAccept,
       });
       onCreated();
       onClose();
@@ -100,6 +102,24 @@ function CreateOpportunityModal({ orgId, orgName, location, onClose, onCreated }
               className="w-28 h-10 bg-surface border border-border rounded-btn px-3 text-sm text-text-primary outline-none focus:border-primary transition-colors"
             />
           </div>
+          {/* Auto-accept toggle */}
+          <button
+            type="button"
+            onClick={() => setAutoAccept(!autoAccept)}
+            className="w-full flex items-center justify-between px-3 py-2.5 bg-surface border border-border rounded-btn hover:border-border-bright transition-colors"
+          >
+            <div className="text-left">
+              <p className="text-sm text-text-primary font-medium">{autoAccept ? 'Auto-accept everyone' : 'Require approval'}</p>
+              <p className="text-xs text-text-tertiary mt-0.5">
+                {autoAccept ? 'Volunteers are confirmed instantly when they sign up' : 'You manually approve each volunteer request'}
+              </p>
+            </div>
+            <div className={`w-10 h-5.5 rounded-full transition-colors shrink-0 flex items-center px-0.5 ${autoAccept ? 'bg-primary' : 'bg-border'}`}
+              style={{ height: 22, minWidth: 40 }}>
+              <motion.div animate={{ x: autoAccept ? 18 : 0 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                className="w-4 h-4 rounded-full bg-white" />
+            </div>
+          </button>
           <div className="flex gap-3 pt-1">
             <motion.button
               type="submit"

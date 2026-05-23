@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Mail, Clock, CheckCircle2, XCircle, Users } from 'lucide-react';
+import { Search, Mail, Clock, CheckCircle2, XCircle, Users, Check, X } from 'lucide-react';
 import CoordinatorLayout from '../components/CoordinatorLayout';
 import { useAuth } from '../context/AuthContext';
-import { getOrgByUser, listenOrgSignups } from '../lib/firestore';
+import { getOrgByUser, listenOrgSignups, approveSignup, rejectSignup } from '../lib/firestore';
 
 const statusConfig = {
   confirmed: { label: 'Confirmed', color: '#4ADE80', bg: '#052e16' },
   completed: { label: 'Completed', color: '#818CF8', bg: '#1e1b4b' },
   cancelled: { label: 'Cancelled', color: '#F87171', bg: '#450a0a' },
+  pending: { label: 'Pending', color: '#FB923C', bg: '#431407' },
 };
 
 export default function CoordinatorVolunteers() {
@@ -41,6 +42,7 @@ export default function CoordinatorVolunteers() {
 
   const confirmed = signups.filter((s) => s.status === 'confirmed').length;
   const completed = signups.filter((s) => s.status === 'completed').length;
+  const pending = signups.filter((s) => s.status === 'pending').length;
   const totalHours = signups.reduce((sum, s) => sum + (s.hoursLogged || 0), 0);
 
   return (
@@ -55,8 +57,8 @@ export default function CoordinatorVolunteers() {
         <div className="grid grid-cols-3 gap-4">
           {[
             { icon: Users, value: confirmed, label: 'Active volunteers', color: '#4ADE80' },
-            { icon: CheckCircle2, value: completed, label: 'Completed shifts', color: '#818CF8' },
-            { icon: Clock, value: `${totalHours}h`, label: 'Total hours logged', color: '#FB923C' },
+            { icon: Clock, value: pending, label: 'Pending approval', color: '#FB923C' },
+            { icon: CheckCircle2, value: `${totalHours}h`, label: 'Total hours logged', color: '#818CF8' },
           ].map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
               className="bg-surface border border-border rounded-card p-4 flex items-center gap-4">
@@ -83,7 +85,7 @@ export default function CoordinatorVolunteers() {
               className="w-full h-9 bg-surface border border-border rounded-btn pl-9 pr-3 text-sm text-text-primary placeholder-text-tertiary outline-none focus:border-primary transition-colors"
             />
           </div>
-          {['all', 'confirmed', 'completed', 'cancelled'].map((s) => (
+          {['all', 'confirmed', 'pending', 'completed', 'cancelled'].map((s) => (
             <button key={s} onClick={() => setFilterStatus(s)}
               className={`text-xs px-3 py-1.5 rounded-full border transition-colors capitalize ${
                 filterStatus === s
@@ -139,6 +141,20 @@ export default function CoordinatorVolunteers() {
                           style={{ color: st.color, backgroundColor: st.bg }}>
                           {st.label}
                         </span>
+                        {s.status === 'pending' && (
+                          <div className="flex gap-1.5 mt-1.5">
+                            <motion.button whileTap={{ scale: 0.95 }}
+                              onClick={() => approveSignup(s.id, s.opportunityId)}
+                              className="flex items-center gap-1 text-xs px-2 py-1 bg-primary/10 border border-primary/30 text-primary rounded-btn hover:bg-primary/20 transition-colors">
+                              <Check size={10} /> Approve
+                            </motion.button>
+                            <motion.button whileTap={{ scale: 0.95 }}
+                              onClick={() => rejectSignup(s.id)}
+                              className="flex items-center gap-1 text-xs px-2 py-1 border border-border text-text-tertiary rounded-btn hover:border-red-900/50 hover:text-red-400 transition-colors">
+                              <X size={10} /> Reject
+                            </motion.button>
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-text-secondary">
                         {s.hoursLogged > 0 ? (
