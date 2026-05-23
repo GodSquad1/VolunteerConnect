@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Heart, PawPrint, Leaf, BookOpen, LogOut } from 'lucide-react';
 import IntakeStep from '../components/IntakeStep';
 import OptionCard from '../components/OptionCard';
-import { generateMatchNote } from '../lib/gemini';
+import { generateMatchNote, rankAndPersonalize } from '../lib/gemini';
+import { fetchOpportunities, normaliseOpportunity } from '../lib/volunteerConnector';
 import { useAuth } from '../context/AuthContext';
 
 const impactOptions = [
@@ -81,18 +82,27 @@ export default function VolunteerIntake() {
 
   const startLoading = () => {
     setIsLoading(true);
-    // Call Gemini to generate personalized match note in the background
-    generateMatchNote({
-      impact: selectedImpact,
-      skills: selectedSkills,
-      motivation,
-    })
-      .then((note) => {
-        sessionStorage.setItem('matchNote', note);
-      })
-      .catch(() => {
-        // Fallback to mock note if API fails — silently
-      });
+
+    // Fetch real opportunities + rank with Gemini in background
+    (async () => {
+      try {
+        const raw = await fetchOpportunities({ impact: selectedImpact, skills: selectedSkills });
+        if (raw.length > 0) {
+          const normalised = raw.map(normaliseOpportunity);
+          const { rankedIndices, personalNote } = await rankAndPersonalize({
+            opportunities: normalised,
+            impact: selectedImpact,
+            skills: selectedSkills,
+            motivation,
+          });
+          const ranked = (rankedIndices || normalised.map((_, i) => i)).map((i) => normalised[i]).filter(Boolean);
+          sessionStorage.setItem('vcMatches', JSON.stringify(ranked));
+          sessionStorage.setItem('matchNote', personalNote || '');
+        }
+      } catch {
+        // Silently fall back to mock data
+      }
+    })();
 
     let idx = 0;
     const interval = setInterval(() => {

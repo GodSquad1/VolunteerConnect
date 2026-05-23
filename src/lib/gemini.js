@@ -69,3 +69,36 @@ Rules:
   const result = await model.generateContent(prompt);
   return result.response.text().trim();
 }
+
+// ─── Rank real opportunities + generate personal note (single call) ────────
+
+export async function rankAndPersonalize({ opportunities, impact, skills, motivation }) {
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+  const oppsText = opportunities
+    .map(
+      (o, i) =>
+        `[${i}] id=${o.id} | "${o.title}" at ${o.orgName}\n     Activities: ${o.activities?.join(', ') || 'N/A'}\n     Desc: ${o.description?.slice(0, 180) || 'N/A'}`
+    )
+    .join('\n\n');
+
+  const prompt = `A volunteer completed an intake form. Rank these real opportunities from best to worst match, then write a short personal note for the top match.
+
+Volunteer intake:
+- Impact focus: "${impact}"
+- Skills: ${skills.join(', ')}
+- What matters to them: "${motivation || 'Not provided'}"
+
+Opportunities:
+${oppsText}
+
+Respond with raw JSON only — no markdown fences:
+{
+  "rankedIndices": [0, 3, 1, 2, ...],
+  "personalNote": "Warm 2-sentence personal explanation for the top match. Second person. Under 65 words. Reference their actual words. Don't start with 'Based on'."
+}`;
+
+  const result = await model.generateContent(prompt);
+  const raw = result.response.text().trim().replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+  return JSON.parse(raw);
+}
