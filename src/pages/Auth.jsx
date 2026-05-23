@@ -11,6 +11,7 @@ import {
   getRedirectResult,
   googleProvider,
 } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 const volunteerContext = {
   role: 'volunteer',
   label: 'Volunteer',
@@ -53,6 +54,7 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const next = searchParams.get('next') || '/';
   const roleParam = searchParams.get('role') || 'volunteer';
+  const { user } = useAuth();
 
   const ctx = roleParam === 'coordinator' ? coordinatorContext : volunteerContext;
   const Icon = ctx.icon;
@@ -67,15 +69,18 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
 
-  // Handle redirect result when returning from Google sign-in
+  // If already authenticated (or just became authenticated), redirect immediately
+  useEffect(() => {
+    if (user) navigate(next, { replace: true });
+  }, [user, next]);
+
+  // Handle returning from Google redirect
   useEffect(() => {
     setGoogleLoading(true);
     getRedirectResult(auth)
       .then((result) => {
-        if (result?.user) {
-          setDone(true);
-          setTimeout(() => navigate(next), 900);
-        }
+        if (result?.user) setDone(true);
+        // navigation handled by the user useEffect above
       })
       .catch((err) => {
         if (err.code !== 'auth/cancelled-popup-request') {
@@ -114,7 +119,7 @@ export default function Auth() {
         await signInWithEmailAndPassword(auth, email, password);
       }
       setDone(true);
-      setTimeout(() => navigate(next), 900);
+      // Navigation handled by useEffect watching user from AuthContext
     } catch (err) {
       setError(firebaseErrorMessage(err.code));
       setLoading(false);
