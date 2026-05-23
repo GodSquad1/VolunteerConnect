@@ -212,7 +212,7 @@ const features = [
   },
   {
     icon: TrendingUp,
-    title: '70% no-show rate, solved',
+    title: '50% no-show rate, solved',
     body: 'Smart reminders, reliability scoring, and instant replacement — so your shifts are always covered.',
     color: '#818CF8',
   },
@@ -329,7 +329,7 @@ export default function Landing() {
             transition={{ delay: 0.7, duration: 0.4 }}
             className="mt-7 text-[18px] text-text-secondary max-w-[500px] leading-relaxed"
           >
-            70% of volunteers who sign up never show up.
+            50% of volunteers who sign up never show up due to confusion.
             <br />
             <span className="text-text-primary">VolunteerConnect fixes both sides of that.</span>
           </motion.p>
