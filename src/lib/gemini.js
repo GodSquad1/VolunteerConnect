@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { org, shifts, volunteers, activityFeed } from '../data/mockData';
 
-const API_KEY = 'AIzaSyCwbZrtgM5OPJj-JSeZcRhOdS_RNDYg-OQ';
+const API_KEY = 'AIzaSyB3rgeda4rIvkPOJbn2vHmFT7Wr58XanzE';
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 // ─── Coordinator CommandBar ────────────────────────────────────────────────
