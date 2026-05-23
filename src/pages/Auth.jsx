@@ -152,7 +152,7 @@ export default function Auth() {
             className="flex items-center gap-2 text-text-tertiary hover:text-text-secondary transition-colors text-sm mb-12"
           >
             <ArrowLeft size={14} />
-            Back to ShowUp
+            Back to VolunteerConnect
           </button>
 
           <div
@@ -216,9 +216,9 @@ export default function Auth() {
           transition={{ duration: 0.4, delay: 0.1 }}
           className="w-full max-w-[380px]"
         >
-          {/* ShowUp logo (mobile) */}
+          {/* VolunteerConnect logo (mobile) */}
           <p className="lg:hidden text-sm font-semibold tracking-heading text-text-primary mb-8">
-            ShowUp
+            VolunteerConnect
           </p>
 
           {/* Tabs */}

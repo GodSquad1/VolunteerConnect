@@ -35,7 +35,7 @@ export default function CoordinatorLayout({ children }) {
         {/* Logo */}
         <div className="px-5 py-5 border-b border-border">
           <div className="flex items-center gap-2">
-            <span className="text-base font-semibold text-text-primary tracking-heading">ShowUp</span>
+            <span className="text-base font-semibold text-text-primary tracking-heading">VolunteerConnect</span>
             <span className="text-xs px-1.5 py-0.5 bg-accent-dim text-accent rounded font-medium">
               Coordinator
             </span>

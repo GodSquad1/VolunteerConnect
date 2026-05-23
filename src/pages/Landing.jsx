@@ -252,7 +252,7 @@ export default function Landing() {
         transition={{ duration: 0.4 }}
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10 py-4 border-b border-border/60 bg-bg/80 backdrop-blur-md"
       >
-        <span className="text-base font-semibold tracking-heading">ShowUp</span>
+        <span className="text-base font-semibold tracking-heading">VolunteerConnect</span>
         <div className="flex items-center gap-3">
           <motion.button
             whileTap={{ scale: 0.97 }}
@@ -331,7 +331,7 @@ export default function Landing() {
           >
             70% of volunteers who sign up never show up.
             <br />
-            <span className="text-text-primary">ShowUp fixes both sides of that.</span>
+            <span className="text-text-primary">VolunteerConnect fixes both sides of that.</span>
           </motion.p>
 
           {/* CTA pair */}
@@ -440,7 +440,7 @@ export default function Landing() {
               Built for both sides of the problem
             </h2>
             <p className="text-text-secondary max-w-md mx-auto text-sm">
-              Most platforms optimize for one side. ShowUp builds intelligence into the whole loop.
+              Most platforms optimize for one side. VolunteerConnect builds intelligence into the whole loop.
             </p>
           </motion.div>
 
@@ -524,7 +524,7 @@ export default function Landing() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-border px-10 py-6 flex items-center justify-between">
-        <span className="text-sm font-semibold tracking-heading text-text-primary">ShowUp</span>
+        <span className="text-sm font-semibold tracking-heading text-text-primary">VolunteerConnect</span>
         <span className="text-xs text-text-tertiary">Built for people who actually show up.</span>
       </footer>
     </div>

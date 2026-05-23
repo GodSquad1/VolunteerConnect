@@ -1,4 +1,4 @@
-// Maps ShowUp intake categories to VolunteerConnector keyword searches
+// Maps VolunteerConnect intake categories to VolunteerConnector keyword searches
 const categoryKeywords = {
   'Help people directly': 'community support seniors food',
   'Work with animals': 'animal shelter wildlife rescue',

@@ -42,7 +42,7 @@ export default function SurgeForm() {
               Send a surge request
             </h1>
             <p className="text-sm text-text-secondary mb-8">
-              Post an urgent need. ShowUp will blast matched volunteers and fill your slots in real time.
+              Post an urgent need. VolunteerConnect will blast matched volunteers and fill your slots in real time.
             </p>
           </motion.div>
 

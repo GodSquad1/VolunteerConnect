@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { org, shifts, volunteers, activityFeed } from '../data/mockData';
 
-const API_KEY = 'AIzaSyB3rgeda4rIvkPOJbn2vHmFT7Wr58XanzE';
+const API_KEY = import.meta.env.VITE_GEMINI_KEY;
 const MODEL = 'gemini-2.0-flash-lite';
 const genAI = new GoogleGenerativeAI(API_KEY);
 
