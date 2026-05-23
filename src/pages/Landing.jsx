@@ -529,9 +529,9 @@ export default function Landing() {
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate('/pitch')}
-          className="text-xs px-3 py-1.5 border border-border text-text-tertiary hover:border-border-bright hover:text-text-primary rounded-btn transition-colors"
+          className="text-xs px-3 py-1.5 border border-border text-text-secondary hover:border-primary hover:text-primary rounded-btn transition-colors"
         >
-          pitch
+          pitch →
         </motion.button>
       </footer>
     </div>
