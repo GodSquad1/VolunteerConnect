@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, setDoc, getDoc, getDocs,
-  updateDoc, deleteDoc, query, where, orderBy,
+  updateDoc, deleteDoc, query, where,
   onSnapshot, serverTimestamp, increment,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -40,18 +40,28 @@ export async function createOpportunity(data) {
 }
 
 export async function getAllOpportunities() {
-  const snap = await getDocs(query(oppsCol(), orderBy('createdAt', 'desc')));
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const snap = await getDocs(oppsCol());
+  const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 }
 
 export async function getOrgOpportunities(orgId) {
-  const snap = await getDocs(query(oppsCol(), where('orgId', '==', orgId), orderBy('createdAt', 'desc')));
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const snap = await getDocs(query(oppsCol(), where('orgId', '==', orgId)));
+  const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 }
 
-export function listenOrgOpportunities(orgId, cb) {
-  const q = query(oppsCol(), where('orgId', '==', orgId), orderBy('createdAt', 'desc'));
-  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+export function listenOrgOpportunities(orgId, cb, onError) {
+  const q = query(oppsCol(), where('orgId', '==', orgId));
+  return onSnapshot(q, (snap) => {
+    const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    // Sort client-side to avoid needing a composite index
+    docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    cb(docs);
+  }, (err) => {
+    console.error('listenOrgOpportunities error:', err);
+    if (onError) onError(err);
+  });
 }
 
 export async function getOpportunity(oppId) {
@@ -86,9 +96,24 @@ export async function signUpForOpportunity(userId, userName, userEmail, opportun
 
 export async function getUserSignups(userId) {
   const snap = await getDocs(
-    query(signupsCol(), where('userId', '==', userId), orderBy('signedUpAt', 'desc'))
+    query(signupsCol(), where('userId', '==', userId))
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return docs.sort((a, b) => (b.signedUpAt?.seconds || 0) - (a.signedUpAt?.seconds || 0));
+}
+
+export function listenUserSignups(userId, cb, onError) {
+  const q = query(signupsCol(), where('userId', '==', userId));
+  return onSnapshot(q, (snap) => {
+    const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    docs.sort((a, b) => (b.signedUpAt?.seconds || 0) - (a.signedUpAt?.seconds || 0));
+    cb(docs);
+  }, (err) => {
+    console.error('listenUserSignups error:', err);
+    if (onError) onError(err);
+    // Fallback to one-time fetch
+    getUserSignups(userId).then(cb).catch(() => cb([]));
+  });
 }
 
 export async function logHours(signupId, hours) {
@@ -106,6 +131,10 @@ export async function cancelSignup(signupId, opportunityId) {
 }
 
 export function listenOrgSignups(orgId, cb) {
-  const q = query(signupsCol(), where('orgId', '==', orgId), orderBy('signedUpAt', 'desc'));
-  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+  const q = query(signupsCol(), where('orgId', '==', orgId));
+  return onSnapshot(q, (snap) => {
+    const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    docs.sort((a, b) => (b.signedUpAt?.seconds || 0) - (a.signedUpAt?.seconds || 0));
+    cb(docs);
+  }, (err) => console.error('listenOrgSignups error:', err));
 }

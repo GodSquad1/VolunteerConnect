@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   getOrgByUser, createOpportunity,
   listenOrgOpportunities, listenOrgSignups,
+  getOrgOpportunities, getAllOpportunities,
 } from '../lib/firestore';
 
 function CreateOpportunityModal({ orgId, orgName, location, onClose, onCreated }) {
@@ -125,6 +126,8 @@ export default function CoordinatorDashboard() {
   const [signups, setSignups] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [listenerError, setListenerError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -136,7 +139,29 @@ export default function CoordinatorDashboard() {
 
   useEffect(() => {
     if (!user) return;
-    const unsubOpps = listenOrgOpportunities(user.uid, setOpportunities);
+    getAllOpportunities().then((all) => {
+      setDebugInfo({
+        myUid: user.uid,
+        totalDocs: all.length,
+        orgIds: [...new Set(all.map(o => o.orgId || '(none)'))].slice(0, 5),
+      });
+    });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    setListenerError(null);
+    // Initial one-time fetch as a guaranteed baseline
+    getOrgOpportunities(user.uid).then(setOpportunities).catch(() => {});
+    const unsubOpps = listenOrgOpportunities(user.uid, (docs) => {
+      console.log('[Dashboard] snapshot fired, docs:', docs.length, 'uid:', user.uid);
+      setOpportunities(docs);
+    }, (err) => {
+      console.error('[Dashboard] listener error:', err);
+      setListenerError(err?.message || String(err));
+      // Fallback: keep polling via one-time fetch
+      getOrgOpportunities(user.uid).then(setOpportunities).catch(() => {});
+    });
     const unsubSignups = listenOrgSignups(user.uid, setSignups);
     return () => { unsubOpps(); unsubSignups(); };
   }, [user]);
@@ -181,6 +206,28 @@ export default function CoordinatorDashboard() {
             <Plus size={15} /> New opportunity
           </motion.button>
         </div>
+
+        {/* Firestore error banner */}
+        {listenerError && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-card px-4 py-3 text-sm text-red-400">
+            <strong>Firestore error:</strong> {listenerError}
+            <br />
+            <span className="text-xs text-text-tertiary">Open your Firebase console → Firestore → Rules and set:
+              <code className="ml-1 bg-surface px-1 rounded">allow read, write: if request.auth != null;</code>
+            </span>
+          </div>
+        )}
+
+        {/* Temporary UID debug panel */}
+        {debugInfo && (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-card px-4 py-3 text-xs font-mono space-y-1">
+            <p className="text-yellow-400 font-semibold">Debug (remove once fixed)</p>
+            <p className="text-text-secondary">Your UID: <span className="text-yellow-300">{debugInfo.myUid}</span></p>
+            <p className="text-text-secondary">Total opportunities in Firestore: <span className="text-yellow-300">{debugInfo.totalDocs}</span></p>
+            <p className="text-text-secondary">orgIds stored: <span className="text-yellow-300">{debugInfo.orgIds.join(', ')}</span></p>
+            <p className="text-text-secondary">Match: <span className={debugInfo.orgIds.includes(debugInfo.myUid) ? 'text-green-400' : 'text-red-400'}>{debugInfo.orgIds.includes(debugInfo.myUid) ? '✓ orgId matches your UID' : '✗ NO MATCH — orgId was stored differently'}</span></p>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4">
@@ -294,7 +341,7 @@ export default function CoordinatorDashboard() {
             orgName={org?.name}
             location={org?.location}
             onClose={() => setShowModal(false)}
-            onCreated={() => {}}
+            onCreated={() => getOrgOpportunities(user.uid).then(setOpportunities).catch(() => {})}
           />
         )}
       </AnimatePresence>

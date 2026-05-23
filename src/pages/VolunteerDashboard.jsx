@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, CheckCircle2, XCircle, Calendar } from 'lucide-react';
-import { getUserSignups, logHours, cancelSignup } from '../lib/firestore';
+import { listenUserSignups, getUserSignups, logHours, cancelSignup } from '../lib/firestore';
 import { useAuth } from '../context/AuthContext';
 
 const statusConfig = {
@@ -19,9 +19,19 @@ export default function VolunteerDashboard() {
   const [loggingId, setLoggingId] = useState(null);
   const [hours, setHours] = useState('');
 
-  const refresh = () => getUserSignups(user.uid).then((d) => { setSignups(d); setLoading(false); });
+  const refresh = () => getUserSignups(user?.uid).then((d) => { setSignups(d); setLoading(false); }).catch(() => setLoading(false));
 
-  useEffect(() => { if (user) refresh(); }, [user]);
+  useEffect(() => {
+    if (!user) return;
+    // One-time fetch first so loading resolves quickly
+    getUserSignups(user.uid).then((d) => { setSignups(d); setLoading(false); }).catch(() => setLoading(false));
+    // Then layer on real-time listener
+    const unsub = listenUserSignups(user.uid, (docs) => {
+      setSignups(docs);
+      setLoading(false);
+    });
+    return unsub;
+  }, [user]);
 
   const totalHours = signups.reduce((s, sg) => s + (sg.hoursLogged || 0), 0);
   const confirmed = signups.filter(s => s.status === 'confirmed').length;
@@ -32,12 +42,12 @@ export default function VolunteerDashboard() {
     await logHours(signupId, Number(hours));
     setLoggingId(null);
     setHours('');
-    refresh();
+    // listener auto-updates signups
   };
 
   const handleCancel = async (signupId, oppId) => {
     await cancelSignup(signupId, oppId);
-    refresh();
+    // listener auto-updates signups
   };
 
   return (
