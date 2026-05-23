@@ -55,7 +55,7 @@ function SlideHook() {
 
 function SlideChaos() {
   const items = [
-    { tool: 'Group texts', consequence: 'Messages get lost. No-shows happen. Nobody knows who's coming.' },
+    { tool: 'Group texts', consequence: "Messages get lost. No-shows happen. Nobody knows who's coming." },
     { tool: 'Spreadsheets', consequence: 'Last updated three weeks ago. Double-booked. Overflowing.' },
     { tool: 'Hope', consequence: 'The unofficial third tool. Used by every coordinator, every week.' },
   ];
