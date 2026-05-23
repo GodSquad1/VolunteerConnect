@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Loader } from 'lucide-react';
+import { ArrowRight, Loader, Copy, Check, ChevronDown, Mail } from 'lucide-react';
 import { runCoordinatorCommand } from '../lib/gemini';
 
 const suggestedCommands = [
@@ -15,6 +15,63 @@ const statusColors = {
   pending: '#FB923C',
   alert: '#F87171',
 };
+
+function CopyButton({ value, label }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button onClick={copy}
+      className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-btn border border-border text-text-secondary hover:border-primary hover:text-primary transition-colors shrink-0">
+      {copied ? <Check size={11} className="text-primary" /> : <Copy size={11} />}
+      {copied ? 'Copied' : label}
+    </button>
+  );
+}
+
+function OutreachPanel({ outreach }) {
+  const [openIdx, setOpenIdx] = useState(0);
+  if (!outreach?.length) return null;
+  return (
+    <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+      className="mt-2 ml-6 border border-primary/20 rounded-card bg-surface overflow-hidden">
+      {outreach.map((person, i) => (
+        <div key={i} className={`${i > 0 ? 'border-t border-border' : ''}`}>
+          <button onClick={() => setOpenIdx(openIdx === i ? -1 : i)}
+            className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-surface-raised transition-colors">
+            <div className="flex items-center gap-2">
+              <Mail size={12} className="text-primary shrink-0" />
+              <span className="text-sm font-medium text-text-primary">{person.name}</span>
+              <span className="text-xs text-text-tertiary">{person.email}</span>
+            </div>
+            <ChevronDown size={12} className={`text-text-tertiary transition-transform ${openIdx === i ? 'rotate-180' : ''}`} />
+          </button>
+          <AnimatePresence>
+            {openIdx === i && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
+                className="overflow-hidden">
+                <div className="px-3 pb-3 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-text-tertiary">Subject: <span className="text-text-secondary">{person.subject}</span></p>
+                    <CopyButton value={person.email} label="Copy email" />
+                  </div>
+                  <div className="bg-surface-raised border border-border rounded-btn p-3">
+                    <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-wrap">{person.body}</p>
+                  </div>
+                  <CopyButton value={`Subject: ${person.subject}\n\n${person.body}`} label="Copy message" />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ))}
+    </motion.div>
+  );
+}
 
 export default function CommandBar({ onGapsFilled, org, opportunities, signups }) {
   const [inputValue, setInputValue] = useState('');
@@ -189,23 +246,23 @@ export default function CommandBar({ onGapsFilled, org, opportunities, signups }
                       initial={{ opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.22 }}
-                      className="flex items-center gap-2.5 py-1.5 px-3 rounded-btn bg-surface border border-border"
                     >
-                      <span
-                        className="text-sm w-4 text-center shrink-0"
-                        style={{ color: statusColors[action.status] || '#A3A3A3' }}
-                      >
-                        {action.icon}
-                      </span>
-                      <span className="text-sm text-text-secondary">{action.text}</span>
-                      {action.status === 'pending' && (
-                        <motion.span
-                          animate={{ opacity: [1, 0.3, 1] }}
-                          transition={{ duration: 1.2, repeat: Infinity }}
-                          className="ml-auto text-xs text-text-tertiary shrink-0"
-                        >
-                          •••
-                        </motion.span>
+                      <div className="flex items-center gap-2.5 py-1.5 px-3 rounded-btn bg-surface border border-border">
+                        <span className="text-sm w-4 text-center shrink-0"
+                          style={{ color: statusColors[action.status] || '#A3A3A3' }}>
+                          {action.icon}
+                        </span>
+                        <span className="text-sm text-text-secondary flex-1">{action.text}</span>
+                        {action.status === 'pending' && !action.outreach && (
+                          <motion.span animate={{ opacity: [1, 0.3, 1] }}
+                            transition={{ duration: 1.2, repeat: Infinity }}
+                            className="ml-auto text-xs text-text-tertiary shrink-0">
+                            •••
+                          </motion.span>
+                        )}
+                      </div>
+                      {action.outreach?.length > 0 && (
+                        <OutreachPanel outreach={action.outreach} />
                       )}
                     </motion.div>
                   )}

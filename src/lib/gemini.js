@@ -45,12 +45,30 @@ Respond with a JSON object in this exact format — no markdown fences, just raw
   "summary": "A concise 1-sentence headline of what you are doing",
   "actions": [
     { "icon": "⚡", "text": "action description", "status": "pending" },
-    { "icon": "✓", "text": "action description", "status": "done" }
+    { "icon": "✓", "text": "action description", "status": "done" },
+    {
+      "icon": "📞",
+      "text": "action description",
+      "status": "pending",
+      "outreach": [
+        {
+          "name": "Volunteer Name",
+          "email": "volunteer@email.com",
+          "subject": "Email subject line",
+          "body": "Full personalized email body — 3-4 sentences. Address them by name, mention the specific shift, why they are a good fit, and a clear ask."
+        }
+      ]
+    }
   ]
 }
 
-Use 4–6 action items. Icons: ⚡ for AI/in-progress tasks, ✓ for completed steps, 📞 for outreach, 📅 for scheduling, ⚠️ for alerts.
-Status must be "done", "pending", or "alert". Be specific — use real names, shift titles, and numbers from the data above.`;
+Rules:
+- Use 4–6 action items total.
+- Icons: ⚡ for AI tasks, ✓ for completed, 📞 for outreach, 📅 for scheduling, ⚠️ for alerts.
+- Status must be "done", "pending", or "alert".
+- For any action involving contacting volunteers, include an "outreach" array with one entry per volunteer. Use their EXACT name and email from the data above.
+- Be specific — use real names, shift titles, and numbers from the data above.
+- Only include "outreach" on 📞 actions. Other actions must NOT have an outreach field.`;
 
   const model = genAI.getGenerativeModel({ model: MODEL });
   const result = await model.generateContent([
