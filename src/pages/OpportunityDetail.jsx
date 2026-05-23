@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Users, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, CheckCircle2, LogIn } from 'lucide-react';
 import { getOpportunity, signUpForOpportunity } from '../lib/firestore';
 import { useAuth } from '../context/AuthContext';
 
@@ -108,6 +108,16 @@ export default function OpportunityDetail() {
               className="flex items-center gap-3 p-4 bg-primary-dim/30 border border-primary/20 rounded-card">
               <CheckCircle2 size={18} className="text-primary" />
               <p className="text-sm text-primary font-medium">You're signed up! Redirecting…</p>
+            </motion.div>
+          ) : !user ? (
+            <motion.div key="login" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+              className="space-y-3">
+              <p className="text-sm text-text-secondary text-center">Sign in to commit to this shift.</p>
+              <motion.button whileTap={{ scale: 0.97 }}
+                onClick={() => navigate(`/auth?role=volunteer&next=${encodeURIComponent(`/volunteer/opportunity/${id}`)}`)}
+                className="w-full h-12 bg-primary text-bg rounded-btn font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                <LogIn size={16} /> Sign in to volunteer
+              </motion.button>
             </motion.div>
           ) : (
             <motion.button key="cta" whileTap={{ scale: 0.97 }} onClick={handleSignUp}
