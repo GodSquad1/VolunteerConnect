@@ -6,8 +6,7 @@ import {
   signOut,
   updateProfile,
   onAuthStateChanged,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   GoogleAuthProvider,
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
@@ -33,6 +32,5 @@ export {
   signOut,
   updateProfile,
   onAuthStateChanged,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
 };

@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Users, Zap, Check } from 'lucide-react';
 import {
@@ -7,8 +6,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   googleProvider,
 } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -69,35 +67,23 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
 
-  // If already authenticated (or just became authenticated), redirect immediately
+  // Redirect as soon as Firebase confirms auth
   useEffect(() => {
     if (user) navigate(next, { replace: true });
   }, [user, next]);
 
-  // Handle returning from Google redirect
-  useEffect(() => {
-    setGoogleLoading(true);
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) setDone(true);
-        // navigation handled by the user useEffect above
-      })
-      .catch((err) => {
-        if (err.code !== 'auth/cancelled-popup-request') {
-          setError(firebaseErrorMessage(err.code));
-        }
-      })
-      .finally(() => setGoogleLoading(false));
-  }, []);
-
   const handleGoogleSignIn = async () => {
     setError('');
     setGoogleLoading(true);
-    // Store next/role so we can redirect correctly after returning
-    sessionStorage.setItem('authNext', next);
-    sessionStorage.setItem('authRole', roleParam);
-    await signInWithRedirect(auth, googleProvider);
-    // Page navigates away — no code runs after this
+    try {
+      await signInWithPopup(auth, googleProvider);
+      // navigation handled by useEffect above when user state updates
+    } catch (err) {
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+        setError(firebaseErrorMessage(err.code));
+      }
+      setGoogleLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
