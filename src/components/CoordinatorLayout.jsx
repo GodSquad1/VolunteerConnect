@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -7,8 +6,10 @@ import {
   Calendar,
   Zap,
   ChevronRight,
+  LogOut,
 } from 'lucide-react';
 import { org } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/coordinator' },
@@ -20,6 +21,12 @@ const navItems = [
 export default function CoordinatorLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen bg-bg flex">
@@ -58,20 +65,34 @@ export default function CoordinatorLayout({ children }) {
           })}
         </nav>
 
-        {/* Org info */}
-        <div className="px-4 py-4 border-t border-border">
+        {/* User + sign out */}
+        <div className="px-4 py-4 border-t border-border space-y-3">
           <div className="flex items-center gap-3">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-bg shrink-0"
               style={{ backgroundColor: org.color }}
             >
-              {org.initials}
+              {user?.displayName
+                ? user.displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+                : org.initials}
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-text-primary truncate">{org.name}</p>
-              <p className="text-xs text-text-tertiary">{org.location}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium text-text-primary truncate">
+                {user?.displayName || org.name}
+              </p>
+              <p className="text-xs text-text-tertiary truncate">
+                {user?.email || org.location}
+              </p>
             </div>
           </div>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-btn text-xs text-text-tertiary hover:text-text-secondary hover:bg-surface-raised transition-colors"
+          >
+            <LogOut size={13} />
+            Sign out
+          </motion.button>
         </div>
       </aside>
 

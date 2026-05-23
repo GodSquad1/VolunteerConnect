@@ -2,6 +2,12 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Users, Zap, Check } from 'lucide-react';
+import {
+  auth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+} from '../lib/firebase';
 
 const volunteerContext = {
   role: 'volunteer',
@@ -21,10 +27,24 @@ const coordinatorContext = {
   tagline: 'Manage your roster with AI — in plain English.',
 };
 
-const mockUsers = [
-  { email: 'demo@showup.com', password: 'demo' },
-  { email: 'test@test.com', password: 'test' },
-];
+const firebaseErrorMessage = (code) => {
+  switch (code) {
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+      return 'Incorrect email or password.';
+    case 'auth/email-already-in-use':
+      return 'An account with this email already exists.';
+    case 'auth/weak-password':
+      return 'Password must be at least 6 characters.';
+    case 'auth/invalid-email':
+      return 'Please enter a valid email address.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please try again later.';
+    default:
+      return 'Something went wrong. Please try again.';
+  }
+};
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -44,20 +64,30 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (!email || !password) { setError('Please fill in all fields.'); return; }
     if (tab === 'signup' && !name) { setError('Please enter your name.'); return; }
+    if (tab === 'signup' && password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
 
     setLoading(true);
-
-    // Simulate auth delay
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      if (tab === 'signup') {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(cred.user, { displayName: name });
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
       setDone(true);
       setTimeout(() => navigate(next), 900);
-    }, 1100);
+    } catch (err) {
+      setError(firebaseErrorMessage(err.code));
+      setLoading(false);
+    }
   };
 
   return (
@@ -305,13 +335,13 @@ export default function Auth() {
 
                 {tab === 'signin' && (
                   <p className="text-center text-xs text-text-tertiary pt-1">
-                    Demo:{' '}
+                    No account?{' '}
                     <button
                       type="button"
-                      onClick={() => { setEmail('demo@showup.com'); setPassword('demo'); }}
+                      onClick={() => { setTab('signup'); setError(''); }}
                       className="text-text-secondary underline underline-offset-2 hover:text-text-primary transition-colors"
                     >
-                      use demo credentials
+                      Create one free
                     </button>
                   </p>
                 )}

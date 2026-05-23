@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Heart, PawPrint, Leaf, BookOpen } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Heart, PawPrint, Leaf, BookOpen, LogOut } from 'lucide-react';
 import IntakeStep from '../components/IntakeStep';
 import OptionCard from '../components/OptionCard';
 import { generateMatchNote } from '../lib/gemini';
+import { useAuth } from '../context/AuthContext';
 
 const impactOptions = [
   { icon: Heart, label: 'Help people directly', description: 'Work hands-on with people in need' },
@@ -29,6 +30,7 @@ const loadingTexts = [
 
 export default function VolunteerIntake() {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
 
@@ -164,7 +166,21 @@ export default function VolunteerIntake() {
               <ArrowLeft size={14} />
               Back
             </button>
-            <span className="text-xs text-text-tertiary">{step} of 4</span>
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-xs text-text-tertiary hidden sm:block">
+                  {user.displayName || user.email}
+                </span>
+              )}
+              <span className="text-xs text-text-tertiary">{step} of 4</span>
+              <button
+                onClick={async () => { await signOut(); navigate('/'); }}
+                className="flex items-center gap-1 text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+                title="Sign out"
+              >
+                <LogOut size={12} />
+              </button>
+            </div>
           </div>
           <div className="h-1 bg-border rounded-full overflow-hidden">
             <motion.div
