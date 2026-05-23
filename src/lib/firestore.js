@@ -136,7 +136,24 @@ export function listenUserSignups(userId, cb, onError) {
 export async function logHours(signupId, hours) {
   await updateDoc(doc(db, 'signups', signupId), {
     hoursLogged: hours,
+    hoursPending: hours,
+    status: 'hours_pending',
+  });
+}
+
+export async function approveHours(signupId, hours) {
+  await updateDoc(doc(db, 'signups', signupId), {
+    hoursLogged: hours,
+    hoursPending: null,
     status: 'completed',
+  });
+}
+
+export async function rejectHours(signupId) {
+  await updateDoc(doc(db, 'signups', signupId), {
+    hoursLogged: 0,
+    hoursPending: null,
+    status: 'confirmed',
   });
 }
 

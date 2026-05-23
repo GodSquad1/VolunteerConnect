@@ -9,6 +9,8 @@ const statusConfig = {
   confirmed: { label: 'Confirmed', color: '#4ADE80', bg: '#16532D' },
   completed: { label: 'Completed', color: '#818CF8', bg: '#1e1b4b' },
   cancelled: { label: 'Cancelled', color: '#F87171', bg: '#450a0a' },
+  hours_pending: { label: 'Hours pending review', color: '#FB923C', bg: '#431407' },
+  pending: { label: 'Awaiting approval', color: '#a3a3a3', bg: '#1a1a1a' },
 };
 
 export default function VolunteerDashboard() {
@@ -160,6 +162,13 @@ export default function VolunteerDashboard() {
                       <div className="flex items-center gap-2 text-xs text-text-tertiary">
                         <CheckCircle2 size={12} className="text-primary" />
                         Completed · {sg.hoursLogged || 0}h logged
+                      </div>
+                    )}
+
+                    {sg.status === 'hours_pending' && (
+                      <div className="flex items-center gap-2 text-xs text-text-tertiary">
+                        <Clock size={12} className="text-accent" style={{ color: '#FB923C' }} />
+                        {sg.hoursPending || sg.hoursLogged}h submitted — waiting for coordinator approval
                       </div>
                     )}
                   </motion.div>

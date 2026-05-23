@@ -1,16 +1,69 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Search, Mail, Clock, CheckCircle2, XCircle, Users, Check, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Mail, Clock, CheckCircle2, Users, Check, X, ChevronDown } from 'lucide-react';
 import CoordinatorLayout from '../components/CoordinatorLayout';
 import { useAuth } from '../context/AuthContext';
-import { getOrgByUser, listenOrgSignups, approveSignup, rejectSignup } from '../lib/firestore';
+import { getOrgByUser, listenOrgSignups, approveSignup, rejectSignup, approveHours, rejectHours } from '../lib/firestore';
 
 const statusConfig = {
   confirmed: { label: 'Confirmed', color: '#4ADE80', bg: '#052e16' },
   completed: { label: 'Completed', color: '#818CF8', bg: '#1e1b4b' },
   cancelled: { label: 'Cancelled', color: '#F87171', bg: '#450a0a' },
   pending: { label: 'Pending', color: '#FB923C', bg: '#431407' },
+  hours_pending: { label: 'Hours review', color: '#FB923C', bg: '#431407' },
 };
+
+function HoursCell({ signup: s }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(String(s.hoursPending || s.hoursLogged || ''));
+
+  if (s.status === 'hours_pending') {
+    return (
+      <div className="space-y-1.5">
+        {editing ? (
+          <div className="flex items-center gap-1.5">
+            <input type="number" min="0.5" step="0.5" value={val} onChange={e => setVal(e.target.value)}
+              className="w-16 h-7 bg-surface-raised border border-primary rounded-btn px-2 text-xs text-text-primary outline-none" autoFocus />
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => { approveHours(s.id, Number(val)); setEditing(false); }}
+              className="flex items-center gap-0.5 text-xs px-2 py-1 bg-primary/10 border border-primary/30 text-primary rounded-btn hover:bg-primary/20 transition-colors">
+              <Check size={10} /> Approve
+            </motion.button>
+            <button onClick={() => setEditing(false)} className="text-xs text-text-tertiary hover:text-text-secondary">Cancel</button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-text-secondary" style={{ color: '#FB923C' }}>
+              <Clock size={11} className="inline mr-1" style={{ color: '#FB923C' }} />
+              {s.hoursPending || s.hoursLogged}h submitted
+            </span>
+          </div>
+        )}
+        {!editing && (
+          <div className="flex gap-1.5">
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => approveHours(s.id, s.hoursPending || s.hoursLogged)}
+              className="flex items-center gap-1 text-xs px-2 py-1 bg-primary/10 border border-primary/30 text-primary rounded-btn hover:bg-primary/20 transition-colors">
+              <Check size={10} /> Approve
+            </motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setEditing(true)}
+              className="text-xs px-2 py-1 border border-border text-text-tertiary rounded-btn hover:border-border-bright hover:text-text-primary transition-colors">
+              Edit
+            </motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => rejectHours(s.id)}
+              className="flex items-center gap-1 text-xs px-2 py-1 border border-border text-text-tertiary rounded-btn hover:border-red-900/50 hover:text-red-400 transition-colors">
+              <X size={10} /> Reject
+            </motion.button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return s.hoursLogged > 0 ? (
+    <span className="flex items-center gap-1.5 text-text-secondary">
+      <Clock size={11} className="text-primary" />{s.hoursLogged}h
+    </span>
+  ) : <span className="text-text-tertiary">—</span>;
+}
 
 export default function CoordinatorVolunteers() {
   const { user } = useAuth();
@@ -43,7 +96,18 @@ export default function CoordinatorVolunteers() {
   const confirmed = signups.filter((s) => s.status === 'confirmed').length;
   const completed = signups.filter((s) => s.status === 'completed').length;
   const pending = signups.filter((s) => s.status === 'pending').length;
+  const hoursPending = signups.filter((s) => s.status === 'hours_pending').length;
   const totalHours = signups.reduce((sum, s) => sum + (s.hoursLogged || 0), 0);
+
+  // Per-volunteer hour totals (approved only)
+  const volunteerHours = Object.values(
+    signups.reduce((acc, s) => {
+      if (!s.userId) return acc;
+      if (!acc[s.userId]) acc[s.userId] = { name: s.userName || s.userEmail, email: s.userEmail, hours: 0 };
+      if (s.status === 'completed') acc[s.userId].hours += s.hoursLogged || 0;
+      return acc;
+    }, {})
+  ).filter(v => v.hours > 0).sort((a, b) => b.hours - a.hours);
 
   return (
     <CoordinatorLayout org={org}>
@@ -85,14 +149,14 @@ export default function CoordinatorVolunteers() {
               className="w-full h-9 bg-surface border border-border rounded-btn pl-9 pr-3 text-sm text-text-primary placeholder-text-tertiary outline-none focus:border-primary transition-colors"
             />
           </div>
-          {['all', 'confirmed', 'pending', 'completed', 'cancelled'].map((s) => (
+          {['all', 'confirmed', 'pending', 'hours_pending', 'completed', 'cancelled'].map((s) => (
             <button key={s} onClick={() => setFilterStatus(s)}
               className={`text-xs px-3 py-1.5 rounded-full border transition-colors capitalize ${
                 filterStatus === s
                   ? 'border-primary bg-primary-dim text-primary'
                   : 'border-border text-text-secondary hover:border-border-bright'
               }`}>
-              {s === 'all' ? 'All' : s}
+              {s === 'all' ? 'All' : s === 'hours_pending' ? `Hours review${hoursPending > 0 ? ` (${hoursPending})` : ''}` : s}
             </button>
           ))}
         </div>
@@ -120,7 +184,7 @@ export default function CoordinatorVolunteers() {
                   <th className="text-left px-4 py-3 text-xs text-text-tertiary font-medium">Volunteer</th>
                   <th className="text-left px-4 py-3 text-xs text-text-tertiary font-medium">Shift</th>
                   <th className="text-left px-4 py-3 text-xs text-text-tertiary font-medium">Status</th>
-                  <th className="text-left px-4 py-3 text-xs text-text-tertiary font-medium">Hours logged</th>
+                  <th className="text-left px-4 py-3 text-xs text-text-tertiary font-medium">Hours</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -128,7 +192,7 @@ export default function CoordinatorVolunteers() {
                   const st = statusConfig[s.status] || statusConfig.confirmed;
                   return (
                     <motion.tr key={s.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
-                      className="hover:bg-surface-raised transition-colors">
+                      className="hover:bg-surface-raised transition-colors align-top">
                       <td className="px-4 py-3">
                         <p className="font-medium text-text-primary">{s.userName || '—'}</p>
                         <p className="text-xs text-text-tertiary flex items-center gap-1 mt-0.5">
@@ -156,18 +220,46 @@ export default function CoordinatorVolunteers() {
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-text-secondary">
-                        {s.hoursLogged > 0 ? (
-                          <span className="flex items-center gap-1.5">
-                            <Clock size={11} className="text-primary" />{s.hoursLogged}h
-                          </span>
-                        ) : '—'}
+                      <td className="px-4 py-3">
+                        <HoursCell signup={s} />
                       </td>
                     </motion.tr>
                   );
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Per-volunteer hours summary */}
+        {volunteerHours.length > 0 && (
+          <div>
+            <h2 className="text-base font-semibold text-text-primary mb-3">Hours by volunteer</h2>
+            <div className="bg-surface border border-border rounded-card overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left px-4 py-3 text-xs text-text-tertiary font-medium">Volunteer</th>
+                    <th className="text-left px-4 py-3 text-xs text-text-tertiary font-medium">Total approved hours</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {volunteerHours.map((v, i) => (
+                    <tr key={i} className="hover:bg-surface-raised transition-colors">
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-text-primary">{v.name}</p>
+                        <p className="text-xs text-text-tertiary">{v.email}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="flex items-center gap-1.5 text-primary font-semibold">
+                          <Clock size={12} />{v.hours}h
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
