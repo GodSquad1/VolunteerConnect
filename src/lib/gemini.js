@@ -1,49 +1,63 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { org, shifts, volunteers, activityFeed } from '../data/mockData';
 
 const API_KEY = import.meta.env.VITE_GEMINI_KEY;
-const MODEL = 'gemini-2.0-flash-lite';
+const MODEL = 'gemini-2.0-flash';
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 // ─── Coordinator CommandBar ────────────────────────────────────────────────
 
-const COORDINATOR_SYSTEM = `You are an AI operations assistant for a volunteer coordinator at ${org.name} in ${org.location}.
+export async function runCoordinatorCommand(query, { org, opportunities = [], signups = [] } = {}) {
+  const orgName = org?.name || 'this organization';
+  const orgLocation = org?.location || '';
+
+  const totalSlots = opportunities.reduce((s, o) => s + (o.slots || 0), 0);
+  const totalFilled = opportunities.reduce((s, o) => s + (o.filledSlots || 0), 0);
+  const openGaps = totalSlots - totalFilled;
+  const fillRate = totalSlots ? Math.round((totalFilled / totalSlots) * 100) : 0;
+  const activeVolunteers = [...new Set(signups.filter(s => s.status === 'confirmed').map(s => s.userId))].length;
+
+  const oppsText = opportunities.length
+    ? opportunities.map(o => `  • "${o.title}" — ${o.date}${o.time ? ` ${o.time}` : ''} — ${o.filledSlots || 0}/${o.slots || 0} filled`).join('\n')
+    : '  (no opportunities posted yet)';
+
+  const volunteersText = signups.length
+    ? [...new Map(signups.map(s => [s.userId, s])).values()]
+        .map(s => `  • ${s.userName || s.userEmail} (${s.userEmail}) — signed up for: ${s.oppTitle} — status: ${s.status}${s.hoursLogged ? ` — ${s.hoursLogged}h logged` : ''}`)
+        .join('\n')
+    : '  (no sign-ups yet)';
+
+  const systemPrompt = `You are an AI operations assistant for a volunteer coordinator at ${orgName}${orgLocation ? ` in ${orgLocation}` : ''}.
 
 Current org state:
-- Active volunteers: ${org.activeVolunteers}
-- Shifts this week: ${org.shiftsThisWeek}
-- Open gaps: ${org.openGaps}
-- Fill rate: ${org.fillRate}%
+- Active volunteers: ${activeVolunteers}
+- Opportunities posted: ${opportunities.length}
+- Open gaps: ${openGaps}
+- Fill rate: ${fillRate}%
 
-Upcoming shifts:
-${shifts.map((s) => `  • ${s.name} (${s.date}, ${s.time}) — ${s.filled}/${s.capacity} filled, status: ${s.status}`).join('\n')}
+Opportunities:
+${oppsText}
 
-Volunteer roster (top 6):
-${volunteers.map((v) => `  • ${v.name} — skills: ${v.skills.join(', ')}, reliability: ${v.reliabilityScore}%`).join('\n')}
-
-Recent activity:
-${activityFeed.slice(0, 5).map((a) => `  • ${a.text}`).join('\n')}
+Volunteer sign-ups:
+${volunteersText}
 
 Respond with a JSON object in this exact format — no markdown fences, just raw JSON:
 {
-  "summary": "A concise 1-sentence headline of what you're doing",
+  "summary": "A concise 1-sentence headline of what you are doing",
   "actions": [
     { "icon": "⚡", "text": "action description", "status": "pending" },
     { "icon": "✓", "text": "action description", "status": "done" }
   ]
 }
 
-Use 4–7 action items. Use ⚡ for in-progress/AI tasks, ✓ for completed steps, 📞 for outreach, 📅 for scheduling.
-Status must be "done", "pending", or "alert". Be specific — mention actual volunteer names, shift names, and times from context above.`;
+Use 4–6 action items. Icons: ⚡ for AI/in-progress tasks, ✓ for completed steps, 📞 for outreach, 📅 for scheduling, ⚠️ for alerts.
+Status must be "done", "pending", or "alert". Be specific — use real names, shift titles, and numbers from the data above.`;
 
-export async function runCoordinatorCommand(query) {
   const model = genAI.getGenerativeModel({ model: MODEL });
   const result = await model.generateContent([
-    { text: COORDINATOR_SYSTEM },
+    { text: systemPrompt },
     { text: `Coordinator query: "${query}"` },
   ]);
   const raw = result.response.text().trim();
-  // Strip markdown fences if the model adds them anyway
   const json = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
   return JSON.parse(json);
 }

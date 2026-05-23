@@ -16,7 +16,7 @@ const statusColors = {
   alert: '#F87171',
 };
 
-export default function CommandBar({ onGapsFilled }) {
+export default function CommandBar({ onGapsFilled, org, opportunities, signups }) {
   const [inputValue, setInputValue] = useState('');
   const [activeCommand, setActiveCommand] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +36,7 @@ export default function CommandBar({ onGapsFilled }) {
     setVisibleActions([]);
 
     try {
-      const data = await runCoordinatorCommand(q);
+      const data = await runCoordinatorCommand(q, { org, opportunities, signups });
       setResponse(data);
       setIsLoading(false);
 

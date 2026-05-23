@@ -285,7 +285,7 @@ export default function CoordinatorDashboard() {
 
         {/* AI Command Bar */}
         <div className="bg-surface border border-border rounded-card p-6">
-          <CommandBar />
+          <CommandBar org={org} opportunities={opportunities} signups={signups} />
         </div>
       </div>
 
